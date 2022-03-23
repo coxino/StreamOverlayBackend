@@ -1,0 +1,26 @@
+﻿<Window x:Class="LiveOverlayManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LiveOverlayManager" xmlns:mainviews="clr-namespace:LiveOverlayManager.MainViews"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.2*"/>
+            <RowDefinition Height="0.8*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <UniformGrid >
+                <Button x:Name="addGamesTabButton" Content="Add New Games And Providers"/>
+                <Button x:Name="LiveBonusHuntTabButton" Content="Bonus Hunt"/>
+                <Button x:Name="LiveBonusBuytournamentTabButton" Content="Tournament"/>
+                <Button x:Name="InPlayGameTabButton" Content="In Play Game"/>                
+            </UniformGrid>
+        </Grid>
+        <Grid Grid.Row="1">
+            <mainviews:AddGamesAndProviders Visibility="Visible"/>
+        </Grid>
+    </Grid>
+</Window>
