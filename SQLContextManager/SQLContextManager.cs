@@ -62,15 +62,35 @@ namespace SQLContextManager
             foreach (var user in userLoyaltyAux)
             {
                 var existingChild = user;
-                if (existingChild.LastActive.AddMinutes(15) > DateTime.Now)
+                if (existingChild.LastActive.AddMinutes(20) > DateTime.Now)
                 {
                     count++;
-                    existingChild.Inventory += ammount;
+                    switch (existingChild.MemberLevel)
+                    {
+                        case MemberLevels.Ajutor:
+                        case MemberLevels.Cop:
+                        case MemberLevels.Coxumator:
+                        case MemberLevels.Gangster:
+                        case MemberLevels.ElChapo:
+                            existingChild.Inventory += ammount * 2;
+                            break;
+                        default:
+                            existingChild.Inventory += ammount;
+                            break;
+                    }                   
                     _context.Entry(user).CurrentValues.SetValues(existingChild);
                 }
             }
 
             return await _context.SaveChangesAsync() > 0 ? count : -1;
+        }
+
+        public async Task RemoveBroadcastMessageAsync(Viewer viewer)
+        {
+            var v2 = viewer;
+            v2.BroadcastMessageCount -= 1;
+            _context.Entry(viewer).CurrentValues.SetValues(v2);
+            _ = await _context.SaveChangesAsync();
         }
 
         public async Task<List<GivewayModel>> GetGiveawayList()
@@ -129,6 +149,7 @@ namespace SQLContextManager
 
             List<string> vs = new List<string>();
 
+            await Task.Run(async () => { 
             while (vs.Count() < giveaway.WinnersCount)
             {
                 var winnerNumber = 0;
@@ -148,20 +169,41 @@ namespace SQLContextManager
                     break;
                 }
             }
-
+            });
             await _context.SaveChangesAsync();
         }
 
-        public async Task<string> SetUserActive(string viewerID)
+        public async Task<string> SetUserActive(string viewerID, string viewerName)
         {
             if(await ViewerExist(viewerID))
             {
                 var viewer = await GetUserLoyalty(viewerID);
+                if(viewer.Name != viewerName)
+                {
+                    viewer.Name = viewerName;
+                }
                 viewer.LastActive = DateTime.Now;
                 return await SaveUser(viewer) ? "success" : "failed";
             }
 
-            return "User Inexistent";
+            else
+            {
+                Viewer newViewer = new Viewer()
+                {
+                    LastActive = DateTime.Now,
+                    CreationTime = DateTime.Now,
+                    Email = "",
+                    Id = viewerID,
+                    Inventory = 25,
+                    Ipadress = "",
+                    MemberLevel = MemberLevels.Viewer,
+                    Name = viewerName,
+                    SuperbetName = ""
+                };
+
+                return await CreateUser(newViewer) ? $"{viewerName} bine ai venit pe live, acum esti inscris(a) in sistemul de loialitate, intra pe https://coxino.ro/shop pentru a schimba coxul cu multe premii" +
+                    $" faine" : $"{viewerName} nu am putut sa te inscriu in sistemul de loialitate. Incearca direct pe site https://coxino.ro/shop";
+            }
         }
 
         public async Task<List<string>> GetGiveawayWinners(int id)
@@ -201,15 +243,41 @@ namespace SQLContextManager
             return await _context.Viewers.FirstOrDefaultAsync(x => x.Id == userID);
         }
 
-        public async Task<bool> AddPointToViewerAsync(Viewer viewer, int ammount)
+        public async Task<bool> AddPointToViewerAsync(Viewer viewer, int ammount, bool doubleUp = true)
         {
-            viewer.Inventory += ammount;
+            if (doubleUp == true)
+            {
+                switch (viewer.MemberLevel)
+                {
+                    case MemberLevels.Ajutor:
+                    case MemberLevels.Cop:
+                    case MemberLevels.Coxumator:
+                    case MemberLevels.Gangster:
+                    case MemberLevels.ElChapo:
+                        ammount *= 2;
+                        viewer.Inventory += ammount;
+                        break;
+                    default:
+                        viewer.Inventory += ammount;
+                        break;
+                }
+            }
+            else
+            {
+                viewer.Inventory += ammount;
+            }
+               
             return await SaveUser(viewer);
         }
 
         public async Task<bool> ViewerExist(string userID)
         {
             return await _context.Viewers.AnyAsync(x => x.Id == userID);
+        }
+
+        public async Task<List<Viewer>> GetViewerByNameAsync(string userName)
+        {
+            return await _context.Viewers.ToListAsync();
         }
 
         public async Task<bool> CreateUser(Viewer viewer)
@@ -222,13 +290,20 @@ namespace SQLContextManager
         public async Task<int> ReadUserJackpot()
         {
             //_context.Jackpots.
-            return 10000;
+            return 0;
         }
 
-        public async Task<bool> AddPointToViewerAsync(string userID, int ammount)
+        public async Task<bool> AddPointToViewerAsync(string userID, int ammount, bool doubleUp = true)
         {
             var viewer = await GetUserLoyalty(userID);
-            return await AddPointToViewerAsync(viewer, ammount);
+            return await AddPointToViewerAsync(viewer, ammount,doubleUp);
+        }
+
+        public async Task<bool> SetUserLevel(string id, int ammount)
+        {
+            var viewer = await GetUserLoyalty(id);
+            viewer.MemberLevel = (MemberLevels)ammount;
+            return await SaveUser(viewer);
         }
     }
 }

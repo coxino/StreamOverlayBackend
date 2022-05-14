@@ -41,5 +41,11 @@ namespace Settings
         public static string RedeemsFile = "/redeems/redeems{0}.json";
 
         public static string LigaFile = "/liga/ligacurenta.json";
+
+        public static string Broadcasts = "/bcm/bcm.json";
+
+        public static string AllGamesOnWebsite = @"D:\Repositoryes\StreamOverlayFrontEnd\src\assets\database\AllGames.json";
+
+        public static string AllGamesOnDebug = @"C:\StreamOverlay\assets\database\AllGames.json";
     }
 }
