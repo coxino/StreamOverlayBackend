@@ -24,6 +24,12 @@ namespace StreamApi.Controllers
         public async Task<ActionResult<List<Viewer>>> GetAsync([FromHeader] string token)
         {
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
+
+            if(db.GetAccountID() != "7963ff08-88e6-4ce5-8b4f-f7c0bcb9e783")
+            {
+                return BadRequest();
+            }
+
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
                return await db.GetLoyaltyPointsAsync();

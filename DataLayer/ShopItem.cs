@@ -18,6 +18,9 @@ namespace DataLayer
         public string Descriere { get; set; }
         public int Stoc { get; set; }
         public bool RequireAditional { get; set; }
+        public bool OnlyMembers { get; set; }
+        public bool IsVisible { get; set; }
+        public double Cooldown { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -33,12 +36,15 @@ namespace DataLayer
                    Imagine == other.Imagine &&
                    Descriere == other.Descriere &&
                    Stoc == other.Stoc &&
-                   RequireAditional == other.RequireAditional;
+                   RequireAditional == other.RequireAditional &&
+                   OnlyMembers == other.OnlyMembers &&
+                   IsVisible == other.IsVisible &&
+                   Cooldown == other.Cooldown;
         }
 
         public override int GetHashCode()
         {
-            int hashCode = -389500738;
+            int hashCode = 481275201;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ItemID);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Nume);
             hashCode = hashCode * -1521134295 + Pret.GetHashCode();
@@ -46,6 +52,9 @@ namespace DataLayer
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Descriere);
             hashCode = hashCode * -1521134295 + Stoc.GetHashCode();
             hashCode = hashCode * -1521134295 + RequireAditional.GetHashCode();
+            hashCode = hashCode * -1521134295 + OnlyMembers.GetHashCode();
+            hashCode = hashCode * -1521134295 + IsVisible.GetHashCode();
+            hashCode = hashCode * -1521134295 + Cooldown.GetHashCode();
             return hashCode;
         }
     }

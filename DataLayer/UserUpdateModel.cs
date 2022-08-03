@@ -19,5 +19,6 @@ namespace DataLayer
         public string itemID { get; set; }
         public string numeSuperbet { get; set; }
         public string numeSpeciala { get; set; }
+
     }
 }

@@ -17,6 +17,8 @@ namespace DatabaseContext
             builder.Property(x => x.LastActive).IsRequired(true);
             builder.Property(x => x.Ipadress).HasMaxLength(50).IsRequired(false);
             builder.Property(x => x.Name).HasMaxLength(50).IsRequired(false);
+            builder.Property(x => x.IsActive).IsRequired(true).HasDefaultValue(false);
+            builder.Property(x => x.ExpiresMember).IsRequired(true);
         }
     }
 }

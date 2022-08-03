@@ -47,6 +47,7 @@
     <Compile Include="BonusHuntLiveSettings.cs" />
     <Compile Include="BonusHuntPreInfo.cs" />
     <Compile Include="BuyTiketModel.cs" />
+    <Compile Include="ClasamentPacaniada.cs" />
     <Compile Include="CoxiUser.cs" />
     <Compile Include="CustomAnimations.cs" />
     <Compile Include="Game.cs" />
@@ -68,6 +69,8 @@
     <Compile Include="UserBet.cs" />
     <Compile Include="UserCooldown.cs" />
     <Compile Include="UserUpdateModel.cs" />
+    <Compile Include="EventModel.cs" />
+    <Compile Include="YoutubeEventModel.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

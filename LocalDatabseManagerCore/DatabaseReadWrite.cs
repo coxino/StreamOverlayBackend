@@ -167,6 +167,7 @@ namespace LocalDatabaseManager
         internal void RemoveBettingFiles()
         {
             Directory.Delete(Settings.ProjectSettings.DatabaseFolder + userID + Settings.ProjectSettings.LiveBettingUserOptions, true);
+            File.Delete(Settings.ProjectSettings.DatabaseFolder + userID + Settings.ProjectSettings.CooldownFolder + "bet" + Settings.ProjectSettings.CooldownFile);
         }
 
         internal void UpdateGame(Game inDbGame, Game game)

@@ -22,7 +22,7 @@ namespace StreamApi.Controllers
         [HttpPost("userCoins")]
         public async Task<CoxiUser> GetAsync([FromBody] UserUpdateModel userData)
         {
-            var db = await UserDatabase.GetDatabaseAsync(userData.token, _context);
+            var db = await UserDatabase.GetGivewayDBAsync(_context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
                 return await db.GetCoxiCoinsAsync(userData.userID, userData.email, userData.ipadress,userData.numeSuperbet,userData.username);

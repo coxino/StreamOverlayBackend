@@ -29,6 +29,21 @@ namespace LocalDatabaseManager
             MemoryManager = new MemoryManager(username);
         }
 
+        public string GetAccountID()
+        {
+            return SQLContextManager.GetAccountID();
+        }
+
+        public ClasamentPacaniada GetClasamentPacaniada()
+        {
+            return MemoryManager.GetPacaniada();
+        }
+
+        public bool SetClasamentPacaniada(ClasamentPacaniada clasamentPacaniada)
+        {
+            return MemoryManager.SetPacaniada(clasamentPacaniada);
+        }
+
         public async Task<Database> LoginUserAsync(string token, ApplicationDbContext dbContext)
         {          
             ValidationResponse = await JwtManager.ValidateTokenAsync(token, dbContext);
@@ -40,6 +55,11 @@ namespace LocalDatabaseManager
             }
 
             return this;
+        }
+
+        public bool SaveShop(List<ShopItem> shopItems)
+        {
+           return MemoryManager.SaveShop(shopItems);
         }
 
         public async Task RemoveBroadcastMessageAsync(Viewer viewer)
@@ -57,9 +77,26 @@ namespace LocalDatabaseManager
             return await SQLContextManager.GetGiveawayList();
         }
 
-        public List<ShopItem> GetShop()
+        public async Task<List<ShopItem>> GetShopAsync(string userYoutubeID = "")
         {
-            return UnmanagedFileModifier.ReadFile<List<ShopItem>>(ProjectSettings.Shop);
+            var shop = UnmanagedFileModifier.ReadFile<List<ShopItem>>(ProjectSettings.Shop);
+            if (string.IsNullOrWhiteSpace(userYoutubeID))
+            {
+                return shop;
+            }
+            else
+            {
+                var viewr = await GetViewerAsync(userYoutubeID) ?? null;
+                if(viewr.MemberLevel > MemberLevels.Coxumator)
+                {
+                    foreach(var item in shop)
+                    {
+                        item.Pret = (int)(item.Pret * 0.8);
+                    }
+                }
+            }
+
+            return shop;
         }
 
         public void UpdateBetting(BettingModel bettingModel)
@@ -69,7 +106,7 @@ namespace LocalDatabaseManager
 
         public async Task<string> BuyGiveawayTiket(BuyTiketModel buyTiketModel)
         {
-            var viewer = await SQLContextManager.GetUserLoyalty(buyTiketModel.userID);
+            var viewer = await SQLContextManager.GetViewerModel(buyTiketModel.userID);
             GivewayModel giveway = await SQLContextManager.GetGivewayModel(buyTiketModel.givewayID);
 
             var userTikets = await SQLContextManager.GetViewerGivewayTokens(viewer.Id, giveway.Id);
@@ -119,6 +156,11 @@ namespace LocalDatabaseManager
             return "Ceva a mers prost... Incearca mai tarziu!";
         }
 
+        public async Task<string> ValidateUser(string accountId)
+        {
+            return await SQLContextManager.ValidateUser(accountId);
+        }
+
         public async Task<List<Viewer>> GetLoyaltyPointsAsync()
         {
             return await SQLContextManager.GetLoyalityAsync();
@@ -141,12 +183,12 @@ namespace LocalDatabaseManager
 
         public async Task<Viewer> GetViewerAsync(string viewerID)
         {
-            return await SQLContextManager.GetUserLoyalty(viewerID);
+            return await SQLContextManager.GetViewerModel(viewerID) ?? null;
         }
 
         public async Task<CoxiUser> GetCoxiCoinsAsync(string userID, string email, string ipadress, string numeSuperbet,string nume)
         {
-            var user = await SQLContextManager.GetUserLoyalty(userID);
+            var user = await SQLContextManager.GetViewerModel(userID);
 
             if (user == null)
             {
@@ -197,12 +239,12 @@ namespace LocalDatabaseManager
 
             }
 
-            return new CoxiUser() { CoxiCoins = user.Inventory, NumeSuperbet = user.SuperbetName };
+            return new CoxiUser() { CoxiCoins = user.Inventory, NumeSuperbet = user.SuperbetName,isActive = user.IsActive };
         }
 
         public async Task<string> WinPointsAsync(Viewer utilizator, int ammount)
         {
-            return await SQLContextManager.AddPointToViewerAsync(utilizator, ammount) ? $"Ai primit {ammount} de cox!" : $"Din pacate nu a reusit transferul a {ammount}";
+            return await SQLContextManager.AddPointToViewerAsync(utilizator, ammount,false) ? $"Ai primit {ammount} de cox!" : $"Din pacate nu a reusit transferul a {ammount}";
         }
 
         public List<LigaUser> GetLiga()
@@ -215,36 +257,30 @@ namespace LocalDatabaseManager
             return MemoryManager.AddLiga(ligaUser);
         }
 
-        public async Task<string> RedeemItem(Viewer user, ShopItem item, string additionaldata = "")
+        public string RedeemItem(Viewer user, ShopItem item, string additionaldata = "")
         {
-            if ((int)user.MemberLevel > 2)
-            {
-                if (user.Inventory < item.Pret * 0.8)
-                {
-                    return "Nu ai suficiente cox!";
-                }
-
-                user.Inventory -= (int)(item.Pret * 0.8);
-            }
-            else
-            {
-                if (user.Inventory < item.Pret)
-                {
-                    return "Nu ai suficiente cox!";
-                }
-
-                user.Inventory -= item.Pret;
-            }
-
-            string redeemer = user.Id + "-" + user.Name + "-" + additionaldata + "\r\n";
+            string redeemer = string.Format("[{0}]-[USERID:{1}]-[NUME UTILIZATOR:{2}]-[PRODUS:{3}]-[ADITIONAL:{4}]", DateTime.Now, user.Id, user.Name, item.Nume, additionaldata);
             string file = string.Format(ProjectSettings.RedeemsFile, item.Nume);
             UnmanagedFileModifier.AppendFile(file, redeemer);
 
             var shop = UnmanagedFileModifier.ReadFile<List<ShopItem>>(ProjectSettings.Shop);
             shop.FirstOrDefault(x => x.ItemID == item.ItemID).Stoc -= 1;
             UnmanagedFileModifier.WriteFile(ProjectSettings.Shop, JsonConvert.SerializeObject(shop));
+           
+            if (string.IsNullOrWhiteSpace(additionaldata))
+            {
+                return $"Ai cumparat cu success {item.Nume}";
+            }
+            else
+            {
+                return $"Ai cumparat cu success {item.Nume} si ai primit {additionaldata}";
+            }
+        }
 
-            return await SQLContextManager.SaveUser(user) ? $"Ai cumparat cu success {item.Nume}!" : $"Produsul nu a putut fi cumparat!";
+        public string GetUserCooldown(string id, string cmd)
+        {
+            var cd = UnmanagedFileModifier.ReadFile<List<UserCooldown>>(ProjectSettings.CooldownFolder + cmd + ProjectSettings.CooldownFile) ?? new List<UserCooldown>();
+            return cd.Where(x => x.userID == id && x.Expires > DateTime.Now).FirstOrDefault().Expires.ToString("yyyy/MM/dd HH:mm:ss");
         }
 
         public async Task<List<Viewer>> GetViewerByNameAsync(string userName)
@@ -398,7 +434,7 @@ namespace LocalDatabaseManager
         {            
             if (await SQLContextManager.ViewerExist(userID))
             {                
-                Viewer viewer = await SQLContextManager.GetUserLoyalty(userID);
+                Viewer viewer = await SQLContextManager.GetViewerModel(userID);
                 if (viewer.Name != userName)
                 {
                     viewer.Name = userName;
@@ -424,7 +460,13 @@ namespace LocalDatabaseManager
             }
         }
 
-        public void AddUserOnCooldown(string userID, string cmd, double cooldown = 5)
+        /// <summary>
+        /// Add User On Cooldown after completing a certain action!
+        /// </summary>
+        /// <param name="userID">user to be put on cooldown</param>
+        /// <param name="cmd">Cooldown cmd</param>
+        /// <param name="cooldownMinutes">Colldown in minutes ex 0.1 1.5 etc...</param>
+        public void AddUserOnCooldown(string userID, string cmd, double cooldownMinutes = 5)
         {
             var cd = UnmanagedFileModifier.ReadFile<List<UserCooldown>>(ProjectSettings.CooldownFolder + cmd + ProjectSettings.CooldownFile) ?? new List<UserCooldown>();
             if (cd.Any(x => x.userID == userID))
@@ -432,7 +474,7 @@ namespace LocalDatabaseManager
                 cd.RemoveAll(x => x.userID == userID);
             }
 
-            cd.Add(new UserCooldown() { userID = userID, Expires = DateTime.Now.AddMinutes(cooldown) });
+            cd.Add(new UserCooldown() { userID = userID, Expires = DateTime.Now.AddMinutes(cooldownMinutes) });
 
             MemoryManager.PutUserOnCooldown(cd, cmd);
         }

@@ -105,14 +105,14 @@ namespace StreamApi.Controllers
             {
                 var gs = await db.GetGivewayListAsync();
 
-                foreach (var gaw in gs)
+                foreach (var curGiveaway in gs)
                 {
-                    var gcount  = await db.SQLContextManager.GetGiveawayWinners(gaw.Id);
+                    var gcount  = await db.SQLContextManager.GetGiveawayWinners(curGiveaway.Id);
                     if (gcount.Count() == 0)
                     {
-                        if (gaw.EndTime < DateTime.Now)
+                        if (curGiveaway.EndTime < DateTime.Now)
                         {
-                            await db.SQLContextManager.SetGiveawayWinner(gaw.Id);
+                            await db.SQLContextManager.SetGiveawayWinner(curGiveaway.Id);
                         }
                     }
                 }
@@ -128,7 +128,14 @@ namespace StreamApi.Controllers
             var db = await UserDatabase.GetGivewayDBAsync(_context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
-                if(db.IsUserOnCooldown(buyTiketModel.userID, "buyTiket"))
+                var utilizator = await db.GetViewerAsync(buyTiketModel.userID);
+
+                if (utilizator.IsActive == false)
+                {
+                    return BadRequest("Trebuie sa-ti validezi contul sa poti cumpara de pe site!");
+                }
+
+                if (db.IsUserOnCooldown(buyTiketModel.userID, "buyTiket"))
                 {
                     return "Poti cumpara un ticket la 5 secunde!";
                 }

@@ -19,6 +19,8 @@ namespace DatabaseContext
         private string superbetName;
         private DateTime lastActive;
         private MemberLevels memberLevel;
+        private bool isActive;
+        private DateTime expiresMember;
 
         public Viewer()
         {
@@ -34,6 +36,8 @@ namespace DatabaseContext
         public DateTime LastActive { get => lastActive; set => lastActive = value; }
         public MemberLevels MemberLevel { get => memberLevel; set => memberLevel = value; }
         public int BroadcastMessageCount { get => broadcastMessageCount; set => broadcastMessageCount = value; }
+        public bool IsActive { get => isActive; set => isActive = value; }
+        public DateTime ExpiresMember { get => expiresMember; set => expiresMember = value; }
 
         public override bool Equals(object obj)
         {
@@ -53,6 +57,8 @@ namespace DatabaseContext
                    superbetName == other.superbetName &&
                    lastActive == other.lastActive &&
                    memberLevel == other.memberLevel &&
+                   isActive == other.isActive &&
+                   expiresMember == other.expiresMember &&
                    Id == other.Id &&
                    Name == other.Name &&
                    Inventory == other.Inventory &&
@@ -62,7 +68,9 @@ namespace DatabaseContext
                    SuperbetName == other.SuperbetName &&
                    LastActive == other.LastActive &&
                    MemberLevel == other.MemberLevel &&
-                   BroadcastMessageCount == other.BroadcastMessageCount;
+                   BroadcastMessageCount == other.BroadcastMessageCount &&
+                   IsActive == other.IsActive &&
+                   ExpiresMember == other.ExpiresMember;
         }
 
         public override int GetHashCode()
@@ -78,6 +86,8 @@ namespace DatabaseContext
             hash.Add(superbetName);
             hash.Add(lastActive);
             hash.Add(memberLevel);
+            hash.Add(isActive);
+            hash.Add(expiresMember);
             hash.Add(Id);
             hash.Add(Name);
             hash.Add(Inventory);
@@ -88,6 +98,8 @@ namespace DatabaseContext
             hash.Add(LastActive);
             hash.Add(MemberLevel);
             hash.Add(BroadcastMessageCount);
+            hash.Add(IsActive);
+            hash.Add(ExpiresMember);
             return hash.ToHashCode();
         }
     }

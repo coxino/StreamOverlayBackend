@@ -16,6 +16,8 @@ namespace MemoryManipulator
         public static object ViewerBet = new object();
         public static object HotWords = new object();
         public static object BroadcastFile = new object();
+
+        public static object LockPacaniada = new object();
     }
     public class GinionistiiLock
     {
@@ -38,6 +40,33 @@ namespace MemoryManipulator
             lock (GinionistiiLock.LockLigaFile)
             {
                 return FileReader.ReadFile<List<LigaUser>>(file);
+            }
+        }
+
+        public ClasamentPacaniada GetPacaniada()
+        {
+            string file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.Pacaniada;
+            lock (CoxinoLockObjects.LockPacaniada)
+            {
+                return FileReader.ReadFile<ClasamentPacaniada>(file);
+            }
+        }
+
+        public bool SetPacaniada(ClasamentPacaniada clasament)
+        {
+            string file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.Pacaniada;
+            lock (CoxinoLockObjects.LockPacaniada)
+            {
+                return FileWriter.SaveData(file, clasament, CoxinoLockObjects.LockPacaniada);
+            }
+        }
+
+        public bool SaveShop(List<ShopItem> shopItems)
+        {
+            string file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.Shop;
+            lock (CoxinoLockObjects.LockPacaniada)
+            {
+                return FileWriter.SaveData(file, shopItems, CoxinoLockObjects.LockPacaniada);
             }
         }
 

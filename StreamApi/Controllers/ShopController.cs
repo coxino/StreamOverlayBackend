@@ -7,6 +7,9 @@ using SQLContextManager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace StreamApi.Controllers
@@ -23,36 +26,67 @@ namespace StreamApi.Controllers
         }
 
         [HttpGet()]
-        public ActionResult<List<ShopItem>> Get([FromQuery] string username)
+        public async Task<ActionResult<List<ShopItem>>> GetAsync([FromQuery] string username, [FromQuery] string viewerId = "")
         {
-            var toReturn = UserDatabase.GetByUsername(username).GetShop();
+            var db = await UserDatabase.GetGivewayDBAsync(_context);
+            if (db.ValidationResponse.ValidationResponse != ValidationResponse.Success)
+            {
+                return BadRequest("Din pacate nu pot valida requestul tau!");
+            }
+
+            var toReturn = await db.GetShopAsync(viewerId);
             return Ok(toReturn);
         }
 
-        [HttpGet("stoc")]
-        public int Stoc(string username)
+        [HttpPost("saveshop")]
+        public async Task<ActionResult<string>> SaveShopAsync([FromHeader] string token, [FromBody] List<ShopItem> shopItems)
         {
-            return UserDatabase.GetByUsername(username).RedeemOfItem("Bilet PROMO 25 PSF");
+            var db = await UserDatabase.GetDatabaseAsync(token, _context);
+            if (db.ValidationResponse.ValidationResponse != ValidationResponse.Success)
+            {
+                return "Din pacate nu pot valida requestul tau!";
+            }
+
+
+            return Ok(db.SaveShop(shopItems) ? "ShopSalvat" : "error");
         }
 
 
         [HttpPost("cumpara")]
         public async Task<ActionResult<string>> BuyItemAsync([FromBody] UserUpdateModel userModel)
         {
-            var db = await UserDatabase.GetDatabaseAsync(userModel.token, _context);
+            var db = await UserDatabase.GetGivewayDBAsync(_context);
             if (db.ValidationResponse.ValidationResponse != ValidationResponse.Success)
             {
-                return BadRequest("Din pacate nu pot valida requestul tau!");
+                return "Din pacate nu pot valida requestul tau!";
             }
 
-            var item = db.GetShop().FirstOrDefault(x => x.ItemID == userModel.itemID);
-            if (item.Stoc < 1)
+            var utilizator = await db.GetViewerAsync(userModel.userID);
+
+            if (utilizator.IsActive == false && utilizator.MemberLevel < MemberLevels.Coxumator)
             {
-                return "Din pacate produsul nu mai este in stoc!";
+                return "Trebuie sa-ti validezi contul sa poti cumpara de pe site!";
             }
+
+            var shop = await db.GetShopAsync();
+            var item = shop.FirstOrDefault(x => x.ItemID == userModel.itemID);
+
             if (item == null)
             {
                 return "Produsul nu a fost gasit!";
+            }
+
+            if (item.OnlyMembers == true)
+            {
+                if (utilizator.MemberLevel < MemberLevels.Coxumator)
+                {
+                    return "Produsul poate fi cumparat doar de membrii!";
+                }
+            }
+
+            if (item.Stoc < 1)
+            {
+                return "Din pacate produsul nu mai este in stoc!";
             }
 
             if (db.IsUserOnCooldown(userModel.userID, "shop"))
@@ -60,229 +94,190 @@ namespace StreamApi.Controllers
                 return Ok("Poti folosi shopul o data la 5 de secunde!");
             }
 
+            if (utilizator.MemberLevel > MemberLevels.Coxumator)
+            {
+                item.Pret = (int)(item.Pret * 0.8);
+            }
+
+            if (utilizator.Inventory < item.Pret)
+            {
+                return "Nu ai suficient cox pentru acest produs";
+            }
+            else
+            {
+                await db.AddPointsToOneUser(utilizator.Id, -1 * item.Pret, false);
+            }
+
             db.AddUserOnCooldown(userModel.userID, "shop", 0.08);
 
-            var utilizator = await db.GetViewerAsync(userModel.userID);
+            if (db.IsUserOnCooldown(utilizator.Id, item.ItemID))
+            {
+                return "Mai poti cumpara acest produs la data ora - " + db.GetUserCooldown(utilizator.Id, item.ItemID);
+            }
+
+            db.AddUserOnCooldown(utilizator.Id, item.ItemID, item.Cooldown);
+
+            if (item.ItemID == "mystery2")
+            {
+                int number = new Random().Next(0, 10);
+                if (number == 6)
+                {
+                    db.RedeemItem(utilizator, item, "50 SHINING CROWN");
+                    return Ok("Ai primit 50RON SHINING CROWN! Nu uita sa-ti completezi numele de la superbet!");
+                }
+                else
+                {
+                    return "NECASTIGATOR";
+                }
+            }
+
+            if (item.ItemID == "mystery1")
+            {
+                int number = new Random().Next(0, 20);
+                if (number == 14)
+                {
+                    db.RedeemItem(utilizator, item, "50 SHINING");
+                    return Ok("Ai primit 50RON SHINING CROWN! Nu uita sa-ti completezi numele de la superbet!");
+                }
+                else
+                {
+                    return "NECASTIGATOR";
+                }
+            }
+
             if (item.ItemID == "gift100")
-            {
-                if (db.IsUserOnCooldown(userModel.userID, "gift100") == false)
+            {         
+                int number = new Random().Next(0, 100);
+                if (number == 14)
                 {
-                    db.AddUserOnCooldown(userModel.userID, "gift100", int.MaxValue);
-                    int number = new Random().Next(0, 400);
-                    if (number == 14)
-                    {
-                        await db.RedeemItem(utilizator, item);
-                        return Ok("Ai primit Paysafe de 25lei puncte!");
-                    }
-
-                    if (number == 11)
-                    {
-                        return await db.WinPointsAsync(utilizator, 1000);
-                    }
-
-                    if (number >= 350)
-                    {
-                        return await db.WinPointsAsync(utilizator, 100);
-                    }
-
-                    if (number >= 300)
-                    {
-                        return await db.WinPointsAsync(utilizator, 50);
-                    }
-
-                    if (number > 14)
-                    {
-                        return await db.WinPointsAsync(utilizator, 25);
-                    }
-                    if (number < 14)
-                    {
-                        return await db.WinPointsAsync(utilizator, 250);
-                    }
+                    db.RedeemItem(utilizator, item, "50 SHINING CROWN");
+                    return Ok("Ai primit 50SHINING CROWN!");
                 }
-                else
+
+                if (number == 11)
                 {
-                    return Ok("Ai primit deja acest cadou, incearca si maine!");
+                    return await db.WinPointsAsync(utilizator, 1000);
                 }
+
+                if (number >= 50)
+                {
+                    return await db.WinPointsAsync(utilizator, 150);
+                }
+
+                if (number >= 75)
+                {
+                    return await db.WinPointsAsync(utilizator, 100);
+                }
+
+                if (number > 14)
+                {
+                    return await db.WinPointsAsync(utilizator, 50);
+                }
+                if (number < 14)
+                {
+                    return await db.WinPointsAsync(utilizator, 250);
+                }
+                
             }
 
-            if(item.ItemID == "rulaj50")
-            {
-                if(db.IsUserOnCooldown(userModel.userID,"rulaj50"))
-                {
-                    return Ok("Te poti inscrie doar o singura data!");
-                }
-                else
-                {
-                    db.AddUserOnCooldown(userModel.userID, "rulaj50",int.MaxValue);
-                }
-            }
 
-            return await db.RedeemItem(utilizator, item, userModel.numeSpeciala);
+            return db.RedeemItem(utilizator, item, userModel.numeSpeciala);
         }
 
-        //[HttpGet("cumpara")]
-        //public async Task<ActionResult<string>> BuyItemAsync([FromQuery] string viewerID, [FromQuery] string itemID, [FromQuery] string userIP)
-        //{
-        //    var item = UserDatabase.GetDatabase("coxino").GetShop().FirstOrDefault(x => x.ItemID == itemID);
-        //    if (item != null)
-        //    {
-        //        if (UserDatabase.GetDatabase("coxino").IsUserOnCooldown(viewerID, "shop"))
-        //        {
-        //            return "Poti folosi shopul o data la 5 !";
-        //        }
-        //        UserDatabase.GetDatabase("coxino").AddUserOnCooldown(viewerID, "shop", 0.5);
+        [HttpGet("validare")]
+        public async Task<ActionResult<string>> ValidateAccountAsync([FromQuery] string valcode)
+        {
+            string accountId = JwtManager.ValidateAccountAsync(valcode, out bool validated);
+            if (validated == true && string.IsNullOrWhiteSpace(accountId) == false)
+            {
+                var db = await UserDatabase.GetGivewayDBAsync(_context);
+                var user = await db.GetViewerAsync(accountId);
+                if (user.IsActive == false)
+                {
+                    await db.ValidateUser(user.Id);
+                    user = await db.GetViewerAsync(accountId);
 
-        //        //var user = UserDatabase.GetDatabase("coxino").GetLoyaltyPoints().Users.FirstOrDefault(x => x.id == userID);
-        //        var user = await _context.GetViewerAsync(new Guid(), viewerID);
+                    if (user.IsActive == true)
+                        return RedirectPermanent("https://coxino.ro/shop?alert=CONTUL-A-FOST-VALIDAT");
+                }
+                else
+                {
+                    return RedirectPermanent("https://coxino.ro/shop?alert=CONTUL-A-FOST-VALIDAT");
+                }
+            }
 
-        //        if (user != null)
-        //        {
-        //            if (user.Inventory >= item.Pret)
-        //            {
-        //                user.Inventory -= item.Pret;
-        //                if (item.ItemID == "gift100")
-        //                {
-        //                    //bah bah
-        //                    if (UserDatabase.GetDatabase("coxino").IsUserOnCooldown(viewerID, "gift100") == false)
-        //                    {
-        //                        UserDatabase.GetDatabase("coxino").AddUserOnCooldown(viewerID, "gift100", int.MaxValue);
-        //                        int number = new Random().Next(0, 400);
-        //                        if (number == 14)
-        //                        {
-        //                            UserDatabase.GetDatabase("coxino").RedeemItem(user, item);
-        //                            return Ok("Ai primit Paysafe de 25lei puncte!");
-        //                        }
-
-        //                        if (number == 11)
-        //                        {
-        //                            user.Inventory += 1000;
-        //                            //UserDatabase.GetDatabase("coxino").SaveUserLoyalty(user);
-
-        //                            return Ok("Ai primit 1000 puncte!");
-        //                        }
-
-        //                        if (number >= 350)
-        //                        {
-        //                            user.Inventory += 100;
-        //                            //UserDatabase.GetDatabase("coxino").SaveUserLoyalty(user);
-
-        //                            return Ok("Ai primit 100 puncte!");
-        //                        }
-
-        //                        if (number >= 300)
-        //                        {
-        //                            user.Inventory += 50;
-        //                            //UserDatabase.GetDatabase("coxino").SaveUserLoyalty(user);
-
-        //                            return Ok("Ai primit 50 puncte!");
-        //                        }
-
-        //                        if (number > 14)
-        //                        {
-        //                            user.Inventory += 25;
-        //                            //UserDatabase.GetDatabase("coxino").SaveUserLoyalty(user);
-
-        //                            return Ok("Ai primit 25 puncte!");
-        //                        }
-        //                        if (number < 14)
-        //                        {
-        //                            user.Inventory += 250;
-        //                            //UserDatabase.GetDatabase("coxino").SaveUserLoyalty(user);
-        //                            return Ok("Ai primit 250 puncte!");
-        //                        }
-        //                    }
-        //                    else
-        //                    {
-        //                        return Ok("Ai primit deja acest cadou, incearca si maine!");
-        //                    }
-        //                }
-
-        //                if(itemID == "fiftyfifty")
-        //                {
-        //                    int number = new Random().Next(0, 400);
-        //                    if(number > 200)
-        //                    {
-        //                        user.Inventory += item.Pret;
-        //                        if (await _context.SaveChangesAsync() > 0)
-        //                        {
-        //                            return Ok("Ai castigat!" + item.Pret);
-        //                        }
-        //                    }
-        //                }
-
-        //                if (item.ItemID == "gift1000")
-        //                {
-        //                    int number = new Random().Next(0, 400);
-        //                    if (number == 14)
-        //                    {
-        //                        UserDatabase.GetDatabase("coxino").RedeemItem(user, new ShopItem() {ItemID = item.ItemID, Nume = "Paysafe25Lei!" });
-        //                        return Ok("Ai primit Paysafe de 25lei!");
-        //                    }
-        //                    if (number == 11)
-        //                    {
-        //                        int number2 = new Random().Next(0, 200);
-        //                        if(number2 == 11)
-        //                        {
-        //                            UserDatabase.GetDatabase("coxino").RedeemItem(user, new ShopItem() {ItemID = item.ItemID, Nume = "Paysafe50Lei!" });
-        //                            return Ok("Ai primit Paysafe de 50lei!");
-        //                        }
-
-        //                        if (number2 < 28)
-        //                        {
-        //                            UserDatabase.GetDatabase("coxino").RedeemItem(user, new ShopItem() { Nume = "Paysafe25Lei!" });
-        //                            return Ok("Ai primit Paysafe de 25lei!");
-        //                        }
-        //                    }
-        //                    if (number < 20)
-        //                    {
-        //                        user.Inventory += 1500;
-        //                        if (await _context.SaveChangesAsync() > 0)
-        //                        {
-        //                            return Ok("Ai primit 1000 puncte!");
-        //                        }
-
-        //                    }
-        //                    if (number > 390)
-        //                    {
-        //                        user.Inventory += 2500;
-        //                        if (await _context.SaveChangesAsync() > 0)
-        //                        {
-        //                            return Ok("Ai primit 2000 puncte!");
-        //                        }
-        //                    }
-
-        //                    if(number > 350)
-        //                    {
-        //                        user.Inventory += 1000;
-        //                        if (await _context.SaveChangesAsync() > 0)
-        //                        {
-        //                            return Ok("Ai primit 500 puncte!");
-        //                        }
-
-        //                    }
-        //                    return "Necastigator";
-        //                }
+            return RedirectPermanent("https://coxino.ro/shop?alert=VALIDAREA-A-AVUT-ERORI");
+        }
 
 
-        //                if (item.Stoc > 0)
-        //                {
-        //                    item.Stoc -= 1;
-        //                    //UserDatabase.GetDatabase("coxino").SaveUserLoyalty(user);
-        //                    UserDatabase.GetDatabase("coxino").RedeemItem(user, item);
-        //                    return Ok("Felicitari ai comandat " + item.Nume);
-        //                }
-        //                else
-        //                {
-        //                    return Ok("Produsul nu mai este in stoc!");
-        //                }
-        //            }
-        //            else
-        //            {
-        //                return Ok("Nu ai suficiente puncte!");
-        //            }
-        //        }
-        //    }
-        //    return Ok("Produsul nu a fost gasit!");
-        //}
+        [HttpGet("genvalcode")]
+        public async Task<ActionResult<string>> GenValidCodeAsync([FromQuery] string userID)
+        {
+            if (string.IsNullOrWhiteSpace(userID))
+            {
+                return "error";
+            }
+
+            var db = await UserDatabase.GetGivewayDBAsync(_context);
+            if (db.IsUserOnCooldown(userID, "validare"))
+            {
+                return Ok("Trebuie sa astepti 5 minute ca sa mai poti genera un email de validare, verifica si spam-ul intre timp.");
+            }
+            else
+            {
+                db.AddUserOnCooldown(userID, "validare", 1);
+            }
+
+            var user = await db.GetViewerAsync(userID);
+
+            if(user.IsActive == true)
+            {
+                return Ok("Contul a fost deja validat!.");
+            }
+
+            if (user != null)
+            {
+                var code = JwtManager.GenerateViewerToken(userID);
+                Email(user.Email, generateEmail(code, user.Name));
+            }
+
+            return "done";
+        }
+
+        private string generateEmail(string code, string name)
+        {
+            var link = "https://coxino.go.ro:5000/api/shop/validare?valcode=";
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"<h1>Salut {name} </h1>");
+            var q = System.IO.File.ReadAllText(@"C:\oferta\oferta1.txt");
+            sb.AppendLine(q);
+            sb.AppendLine($"<h2>Pentru a activa contul este necesar sa dai click <b> <a href='{link}{code}'>AICI</a> </b><br></h2>");
+            return sb.ToString();
+        }
+
+        public static void Email(string toEmail, string htmlString)
+        {
+            try
+            {
+                MailMessage message = new MailMessage();
+                SmtpClient smtp = new SmtpClient();
+                message.From = new MailAddress("noreply@coxino.ro");
+                message.To.Add(new MailAddress(toEmail));
+                message.Subject = "Validare Cont Coxino.ro";
+                message.IsBodyHtml = true; //to make message body as html  
+                message.Body = htmlString;
+                smtp.Port = 26;
+                smtp.Host = "mail.coxino.ro"; //for gmail host  
+                smtp.EnableSsl = false;
+                smtp.UseDefaultCredentials = false;
+                smtp.Credentials = new NetworkCredential("noreply@coxino.ro", "1qazxsw23edc$RFV");
+                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                smtp.Send(message);
+            }
+            catch (Exception e1)
+            {
+                var p = e1;
+            }
+        }
     }
 }
