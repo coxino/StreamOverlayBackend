@@ -33,7 +33,7 @@ namespace StreamApi.Controllers
         [HttpGet()]
         public async Task<List<GivewayViewModel>> GetAsync([FromQuery] string viewerID = "")
         {
-            if (string.IsNullOrWhiteSpace(viewerID))
+            if (string.IsNullOrWhiteSpace(viewerID) || viewerID=="undefined")
             {
                 var db = await UserDatabase.GetGivewayDBAsync(_context);
                 if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
@@ -42,7 +42,7 @@ namespace StreamApi.Controllers
                     var gs = await db.GetGivewayListAsync();
 
                     foreach (var gaw in gs)
-                    {
+                    {                        
                         givewayViewModels.Add(new GivewayViewModel()
                         {
                             GivewayModel = gaw,
@@ -65,14 +65,29 @@ namespace StreamApi.Controllers
 
                     foreach (var gaw in gs)
                     {
+                        var viewer = await db.GetViewerAsync(viewerID);
 
-                        givewayViewModels.Add(new GivewayViewModel()
+                        if (viewer.MemberLevel >  MemberLevels.Coxumator)
                         {
-                            GivewayModel = gaw,
-                            TotalTikets = await db.SQLContextManager.GetGivewayTiketCount(gaw.Id),
-                            UserTikets = await db.SQLContextManager.GetViewerGivewayTokens(viewerID, gaw.Id),
-                            Winners = await db.SQLContextManager.GetGiveawayWinners(gaw.Id)
-                        });
+                            gaw.Price = (int)(gaw.Price * 0.8);
+                            givewayViewModels.Add(new GivewayViewModel()
+                            {
+                                GivewayModel = gaw,
+                                TotalTikets = await db.SQLContextManager.GetGivewayTiketCount(gaw.Id),
+                                UserTikets = await db.SQLContextManager.GetViewerGivewayTokens(viewerID, gaw.Id),
+                                Winners = await db.SQLContextManager.GetGiveawayWinners(gaw.Id)
+                            });
+                        }
+                        else
+                        {
+                            givewayViewModels.Add(new GivewayViewModel()
+                            {
+                                GivewayModel = gaw,
+                                TotalTikets = await db.SQLContextManager.GetGivewayTiketCount(gaw.Id),
+                                UserTikets = await db.SQLContextManager.GetViewerGivewayTokens(viewerID, gaw.Id),
+                                Winners = await db.SQLContextManager.GetGiveawayWinners(gaw.Id)
+                            });
+                        }
                     }
 
                     var toReturn = givewayViewModels.OrderByDescending(x => x.GivewayModel.EndTime > DateTime.Now).ToList();
@@ -90,14 +105,14 @@ namespace StreamApi.Controllers
             {
                 var gs = await db.GetGivewayListAsync();
 
-                foreach (var gaw in gs)
+                foreach (var curGiveaway in gs)
                 {
-                    var gcount  = await db.SQLContextManager.GetGiveawayWinners(gaw.Id);
+                    var gcount  = await db.SQLContextManager.GetGiveawayWinners(curGiveaway.Id);
                     if (gcount.Count() == 0)
                     {
-                        if (gaw.EndTime < DateTime.Now)
+                        if (curGiveaway.EndTime < DateTime.Now)
                         {
-                            await db.SQLContextManager.SetGiveawayWinner(gaw.Id);
+                            await db.SQLContextManager.SetGiveawayWinner(curGiveaway.Id);
                         }
                     }
                 }
@@ -113,6 +128,18 @@ namespace StreamApi.Controllers
             var db = await UserDatabase.GetGivewayDBAsync(_context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
+                var utilizator = await db.GetViewerAsync(buyTiketModel.userID);
+
+                if (utilizator.IsActive == false)
+                {
+                    return BadRequest("Trebuie sa-ti validezi contul sa poti cumpara de pe site!");
+                }
+
+                if (db.IsUserOnCooldown(buyTiketModel.userID, "buyTiket"))
+                {
+                    return "Poti cumpara un ticket la 5 secunde!";
+                }
+                db.AddUserOnCooldown(buyTiketModel.userID, "buyTiket", 0.09);
                 return await db.BuyGiveawayTiket(buyTiketModel);
             }
 

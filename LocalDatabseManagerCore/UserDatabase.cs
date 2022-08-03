@@ -22,7 +22,7 @@ namespace LocalDatabaseManager
 
         public static async Task<Database> GetGivewayDBAsync(ApplicationDbContext context)
         {
-            var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6ImNveGlubyAgICAiLCJQYXNzd29yZCI6ImNvc21pbjEyMzQgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIiwibmJmIjoxNjQxNzUxMzQ4LCJleHAiOjE2NDIzNTYxNDgsImlhdCI6MTY0MTc1MTM0OCwiaXNzIjoiaHR0cDovL215c2l0ZS5jb20iLCJhdWQiOiJodHRwOi8vbXlhdWRpZW5jZS5jb20ifQ.mBT7x_HqxVaLqZFLExmMKEp0sLMzlAlECMD-hXAtAuM";
+            var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6ImNveGlubyAgICAiLCJQYXNzd29yZCI6IlczeU12SHlUNzQ1YVpuYUMiLCJVc2VySWQiOiI3OTYzZmYwOC04OGU2LTRjZTUtOGI0Zi1mN2MwYmNiOWU3ODMiLCJuYmYiOjE2NTk0NzQyNzUsImV4cCI6MTY2MDA3OTA3NSwiaWF0IjoxNjU5NDc0Mjc1LCJpc3MiOiJodHRwOi8vbXlzaXRlLmNvbSIsImF1ZCI6Imh0dHA6Ly9teWF1ZGllbmNlLmNvbSJ9.DejS2cDdqQnnjTCD0DnJiqssaYd3VhqfHntGtpYDtpk";
             return await new Database().LoginUserAsync(token, context);
         }
     }

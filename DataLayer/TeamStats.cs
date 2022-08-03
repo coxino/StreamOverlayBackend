@@ -64,6 +64,7 @@ namespace DataLayer
         {
             Payout = new List<PayoutTemplate>();
             Nume = team1.Nume;
+            NumeJucator = team1.NumeJucator;
             BuyCost = team1.BuyCost;
             for (int i = 0; i < team1.Payout.Count; i++)
             {
@@ -74,6 +75,7 @@ namespace DataLayer
             HasWon = false;
         }
 
+        public string NumeJucator { get; set; }
         public string Nume { get; set; }
         public double BuyCost { get; set; }
         public List<PayoutTemplate> Payout { get; set; }
@@ -105,6 +107,7 @@ namespace DataLayer
         {
             return other != null &&
                    Nume == other.Nume &&
+                   NumeJucator == other.NumeJucator &&
                    BuyCost == other.BuyCost &&
                    EqualityComparer<List<PayoutTemplate>>.Default.Equals(Payout, other.Payout) &&
                    Scor == other.Scor &&
@@ -117,6 +120,7 @@ namespace DataLayer
         {
             int hashCode = -1398063904;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Nume);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(NumeJucator);
             hashCode = hashCode * -1521134295 + BuyCost.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<List<PayoutTemplate>>.Default.GetHashCode(Payout);
             hashCode = hashCode * -1521134295 + Scor.GetHashCode();

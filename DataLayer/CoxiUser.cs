@@ -13,6 +13,7 @@ namespace DataLayer
         }
         public string NumeSuperbet { get; set; }
         public int CoxiCoins { get; set; }
+        public bool isActive { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -23,14 +24,16 @@ namespace DataLayer
         {
             return other != null &&
                    NumeSuperbet == other.NumeSuperbet &&
-                   CoxiCoins == other.CoxiCoins;
+                   CoxiCoins == other.CoxiCoins &&
+                   isActive == other.isActive;
         }
 
         public override int GetHashCode()
         {
-            int hashCode = 105980798;
+            int hashCode = 808614285;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(NumeSuperbet);
             hashCode = hashCode * -1521134295 + CoxiCoins.GetHashCode();
+            hashCode = hashCode * -1521134295 + isActive.GetHashCode();
             return hashCode;
         }
     }

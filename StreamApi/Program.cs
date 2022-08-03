@@ -22,7 +22,7 @@ namespace StreamApi
             {
                 config.ConfigureHttpsDefaults(config =>
                 {
-                    config.ServerCertificate = new X509Certificate2(@"D:\coxino.go.ro.pfx", "cosmin1234", X509KeyStorageFlags.DefaultKeySet);
+                    config.ServerCertificate = new X509Certificate2(@"D:\certificate.pfx", "cosminR32", X509KeyStorageFlags.DefaultKeySet);
                     config.SslProtocols = SslProtocols.Tls12;
                 });
             })

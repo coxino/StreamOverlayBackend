@@ -39,7 +39,7 @@ namespace StreamApi.Controllers
         [HttpPost("deposit")]
         public async Task<ActionResult<string>> Deposit([FromBody] DepositModel userModel)
         {
-            return "ai primit fise";
+            return "ai primit cox";
         }
 
         [HttpPost("register")]
@@ -48,10 +48,10 @@ namespace StreamApi.Controllers
             var db = await UserDatabase.GetDatabaseAsync(registerModel.userUpdateModel.token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
-                return await db.AddPointsAsync(registerModel.userUpdateModel.userID, "coxino", 2000);
+                return await db.RegisterNewViewerFromChat(registerModel.userUpdateModel.userID, "coxino", 25);
             }
 
-            return "Din pacate nu am putut credita fisele :/";
+            return "Din pacate nu am putut credita coxul :/";
         }
     }
 }

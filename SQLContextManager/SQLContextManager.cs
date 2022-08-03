@@ -13,8 +13,6 @@ namespace SQLContextManager
         private ApplicationDbContext _context;
         private Guid UserId;
 
-
-
         public SQLContex()
         {
         }
@@ -54,6 +52,11 @@ namespace SQLContextManager
             return await _context.SaveChangesAsync() > 0;
         }
 
+        public string GetAccountID()
+        {
+            return UserId.ToString();
+        }
+
         public async Task<int> AddPointToAllViewersAndCountAsync(int ammount)
         {
             int count = 0;
@@ -62,15 +65,35 @@ namespace SQLContextManager
             foreach (var user in userLoyaltyAux)
             {
                 var existingChild = user;
-                if (existingChild.LastActive.AddMinutes(15) > DateTime.Now)
+                if (existingChild.LastActive.AddMinutes(20) > DateTime.Now)
                 {
                     count++;
-                    existingChild.Inventory += ammount;
+                    switch (existingChild.MemberLevel)
+                    {
+                        case MemberLevels.Ajutor:
+                        case MemberLevels.Cop:
+                        case MemberLevels.Coxumator:
+                        case MemberLevels.Gangster:
+                        case MemberLevels.ElChapo:
+                            existingChild.Inventory += ammount * 2;
+                            break;
+                        default:
+                            existingChild.Inventory += ammount;
+                            break;
+                    }                   
                     _context.Entry(user).CurrentValues.SetValues(existingChild);
                 }
             }
 
             return await _context.SaveChangesAsync() > 0 ? count : -1;
+        }
+
+        public async Task RemoveBroadcastMessageAsync(Viewer viewer)
+        {
+            var v2 = viewer;
+            v2.BroadcastMessageCount -= 1;
+            _context.Entry(viewer).CurrentValues.SetValues(v2);
+            _ = await _context.SaveChangesAsync();
         }
 
         public async Task<List<GivewayModel>> GetGiveawayList()
@@ -123,45 +146,92 @@ namespace SQLContextManager
             var all_tikets = await _context.GivewayTikets.ToListAsync();
             var thisGWTikets = all_tikets.Where(x => x.GiveawayID == id).ToList();
 
+            List<GivewayTiket> membersTikets = new List<GivewayTiket>();
+            foreach(var viewerTiket in thisGWTikets)
+            {
+                var viewer = await GetViewerModel(viewerTiket.ViewerID);
+                if (viewer.MemberLevel > MemberLevels.Moderator)
+                {
+                    membersTikets.Add(new GivewayTiket() { ViewerID = viewer.Id, GiveawayID = id });
+                }
+            }
+
+            thisGWTikets.AddRange(membersTikets);
+
             var all_tikets_distinct = all_tikets.GroupBy(x => x.ViewerID)
                                   .Select(g => g.First())
                                   .ToList();
 
-            List<string> vs = new List<string>();
+            List<string> giveawayWinners = new List<string>();
 
-            while (vs.Count() < giveaway.WinnersCount)
+            await Task.Run(async () =>
             {
-                var winnerNumber = 0;
-                var winner = "";
-
-                winnerNumber = new Random().Next(0, thisGWTikets.Count());
-                winner = thisGWTikets[winnerNumber].ViewerID;
-
-                if (vs.Any(x => x == winner) == false)
+                while (giveawayWinners.Count() < giveaway.WinnersCount)
                 {
-                    vs.Add(winner);
-                    await _context.Winners.AddAsync(new Winner() { GiveawayID = id, ViewerID = winner });
-                }
+                    var winnerNumber = 0;
+                    var winner = "";
 
-                if (all_tikets_distinct.Count() <= giveaway.WinnersCount)
-                {
-                    break;
-                }
-            }
+                    winnerNumber = new Random().Next(0, thisGWTikets.Count());
+                    winner = thisGWTikets[winnerNumber].ViewerID;
 
+                    if (giveawayWinners.Any(x => x == winner) == false)
+                    {
+                        giveawayWinners.Add(winner);
+                        await _context.Winners.AddAsync(new Winner() { GiveawayID = id, ViewerID = winner });
+                    }
+
+                    if (all_tikets_distinct.Count() <= giveaway.WinnersCount)
+                    {
+                        break;
+                    }
+                }
+            });
             await _context.SaveChangesAsync();
         }
 
-        public async Task<string> SetUserActive(string viewerID)
+        public async Task<string> ValidateUser(string accountId)
+        {
+            if (await ViewerExist(accountId))
+            {
+                var viewer = await GetViewerModel(accountId);
+                viewer.IsActive = true;
+                return await SaveUser(viewer) ? "success" : "failed";
+            }
+
+            return "Failed to Validate user";
+        }
+
+        public async Task<string> SetUserActive(string viewerID, string viewerName)
         {
             if(await ViewerExist(viewerID))
             {
-                var viewer = await GetUserLoyalty(viewerID);
+                var viewer = await GetViewerModel(viewerID);
+                if(viewer.Name != viewerName)
+                {
+                    viewer.Name = viewerName;
+                }
                 viewer.LastActive = DateTime.Now;
                 return await SaveUser(viewer) ? "success" : "failed";
             }
 
-            return "User Inexistent";
+            else
+            {
+                Viewer newViewer = new Viewer()
+                {
+                    LastActive = DateTime.Now,
+                    CreationTime = DateTime.Now,
+                    Email = "",
+                    Id = viewerID,
+                    Inventory = 25,
+                    Ipadress = "",
+                    MemberLevel = MemberLevels.Viewer,
+                    Name = viewerName,
+                    SuperbetName = ""
+                };
+
+                return await CreateUser(newViewer) ? $"{viewerName} bine ai venit pe live, acum esti inscris(a) in sistemul de loialitate, intra pe https://coxino.ro/shop pentru a schimba coxul cu multe premii" +
+                    $" faine" : $"{viewerName} nu am putut sa te inscriu in sistemul de loialitate. Incearca direct pe site https://coxino.ro/shop";
+            }
         }
 
         public async Task<List<string>> GetGiveawayWinners(int id)
@@ -196,20 +266,46 @@ namespace SQLContextManager
         /// </summary>
         /// <param name="userID"></param>
         /// <returns></returns>
-        public async Task<Viewer> GetUserLoyalty(string userID)
+        public async Task<Viewer> GetViewerModel(string userID)
         {
             return await _context.Viewers.FirstOrDefaultAsync(x => x.Id == userID);
         }
 
-        public async Task<bool> AddPointToViewerAsync(Viewer viewer, int ammount)
+        public async Task<bool> AddPointToViewerAsync(Viewer viewer, int ammount, bool doubleUp = true)
         {
-            viewer.Inventory += ammount;
+            if (doubleUp == true)
+            {
+                switch (viewer.MemberLevel)
+                {
+                    case MemberLevels.Ajutor:
+                    case MemberLevels.Cop:
+                    case MemberLevels.Coxumator:
+                    case MemberLevels.Gangster:
+                    case MemberLevels.ElChapo:
+                        ammount *= 2;
+                        viewer.Inventory += ammount;
+                        break;
+                    default:
+                        viewer.Inventory += ammount;
+                        break;
+                }
+            }
+            else
+            {
+                viewer.Inventory += ammount;
+            }
+               
             return await SaveUser(viewer);
         }
 
         public async Task<bool> ViewerExist(string userID)
         {
             return await _context.Viewers.AnyAsync(x => x.Id == userID);
+        }
+
+        public async Task<List<Viewer>> GetViewerByNameAsync(string userName)
+        {
+            return await _context.Viewers.ToListAsync();
         }
 
         public async Task<bool> CreateUser(Viewer viewer)
@@ -222,13 +318,21 @@ namespace SQLContextManager
         public async Task<int> ReadUserJackpot()
         {
             //_context.Jackpots.
-            return 10000;
+            return 0;
         }
 
-        public async Task<bool> AddPointToViewerAsync(string userID, int ammount)
+        public async Task<bool> AddPointToViewerAsync(string userID, int ammount, bool doubleUp = true)
         {
-            var viewer = await GetUserLoyalty(userID);
-            return await AddPointToViewerAsync(viewer, ammount);
+            var viewer = await GetViewerModel(userID);
+            return await AddPointToViewerAsync(viewer, ammount,doubleUp);
+        }
+
+        public async Task<bool> SetUserLevel(string id, int ammount)
+        {
+            var viewer = await GetViewerModel(id);
+            viewer.MemberLevel = (MemberLevels)ammount;
+            viewer.ExpiresMember = DateTime.Now.AddDays(31);
+            return await SaveUser(viewer);
         }
     }
 }

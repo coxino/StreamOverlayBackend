@@ -47,6 +47,7 @@ namespace DatabaseContext
         public DateTime EndTime { get; set; }
         public int WinnersCount { get; set; }
         public int Price { get; set; }
+        public int MaxTikets { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -61,18 +62,13 @@ namespace DatabaseContext
                    Description == other.Description &&
                    EndTime == other.EndTime &&
                    WinnersCount == other.WinnersCount &&
-                   Price == other.Price;
+                   Price == other.Price &&
+                   MaxTikets == other.MaxTikets;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Id, Name, Description, EndTime, WinnersCount, Price);
+            return HashCode.Combine(Id, Name, Description, EndTime, WinnersCount, Price, MaxTikets);
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public List<Viewer> Winners { get; set; }
-        //public List<Viewer> Reserves { get; set; }
     }
 }

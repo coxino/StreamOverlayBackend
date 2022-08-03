@@ -108,24 +108,10 @@ namespace LocalDatabaseManager
             Game game;
 
             var Games = JsonConvert.DeserializeObject<List<Game>>(File.ReadAllText(file));
-            game = Games?.FirstOrDefault(x => x.Name == gameName);
+            game = Games?.FirstOrDefault(x => x.Name == gameName) ?? null;
 
-            if (game == null)
-            {
-                game = new Game() { Name = gameName };
-
-                if (userID == "coxino")
-                {
-                    Games.Add(game);
-                    file = Settings.ProjectSettings.DatabaseFolder + Settings.ProjectSettings.GamesFile;
-                    lock (SyncRoot)
-                    {
-                        File.WriteAllText(file, JsonConvert.SerializeObject(Games));
-                    }
-                }
-            }
-
-            game.Rounds = GameRounds(gameName);
+            if(game != null)
+            game.Rounds = GameRounds(game.Name);
 
             return game;
         }
@@ -181,6 +167,53 @@ namespace LocalDatabaseManager
         internal void RemoveBettingFiles()
         {
             Directory.Delete(Settings.ProjectSettings.DatabaseFolder + userID + Settings.ProjectSettings.LiveBettingUserOptions, true);
+            File.Delete(Settings.ProjectSettings.DatabaseFolder + userID + Settings.ProjectSettings.CooldownFolder + "bet" + Settings.ProjectSettings.CooldownFile);
+        }
+
+        internal void UpdateGame(Game inDbGame, Game game)
+        {
+            var file = Settings.ProjectSettings.DatabaseFolder + Settings.ProjectSettings.GamesFile;
+            var Games = JsonConvert.DeserializeObject<List<Game>>(File.ReadAllText(file));
+            game = Games?.FirstOrDefault(x => x.Name == inDbGame.Name);
+            game.Image = game.Image;
+        }
+
+        internal void SaveNewGame(InPlayGame _game)
+        {
+            if (_game == null || string.IsNullOrWhiteSpace(_game.Game.Name))
+                return;
+
+            var file = Settings.ProjectSettings.DatabaseFolder + Settings.ProjectSettings.GamesFile;
+            Game game;
+
+            var Games = JsonConvert.DeserializeObject<List<Game>>(File.ReadAllText(file));
+
+            var gg = Games.Where(x => string.IsNullOrWhiteSpace(x.Image));
+
+            //Games.RemoveAll(x => string.IsNullOrWhiteSpace(x.Image));
+
+            game = Games?.FirstOrDefault(x => x.Name == _game.Game.Name);
+
+            var shouldCreate = game == null;
+
+            if (game != null && game?.Image != _game.Game.Image)
+            {
+                shouldCreate = true;
+                Games.Remove(game);
+            }          
+
+            if (shouldCreate)
+            {
+                game = _game.Game;
+                Games.Add(game);
+                file = Settings.ProjectSettings.DatabaseFolder + Settings.ProjectSettings.GamesFile;
+                lock (SyncRoot)
+                {
+                    File.WriteAllText(file, JsonConvert.SerializeObject(Games));
+                    File.WriteAllText(Settings.ProjectSettings.AllGamesOnDebug, JsonConvert.SerializeObject(Games));
+                    File.WriteAllText(Settings.ProjectSettings.AllGamesOnWebsite, JsonConvert.SerializeObject(Games));
+                }
+            }
         }
     }
 }

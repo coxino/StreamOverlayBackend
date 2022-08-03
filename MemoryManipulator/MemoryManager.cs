@@ -15,6 +15,9 @@ namespace MemoryManipulator
         public static object CooldownFile = new object(); 
         public static object ViewerBet = new object();
         public static object HotWords = new object();
+        public static object BroadcastFile = new object();
+
+        public static object LockPacaniada = new object();
     }
     public class GinionistiiLock
     {
@@ -37,6 +40,33 @@ namespace MemoryManipulator
             lock (GinionistiiLock.LockLigaFile)
             {
                 return FileReader.ReadFile<List<LigaUser>>(file);
+            }
+        }
+
+        public ClasamentPacaniada GetPacaniada()
+        {
+            string file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.Pacaniada;
+            lock (CoxinoLockObjects.LockPacaniada)
+            {
+                return FileReader.ReadFile<ClasamentPacaniada>(file);
+            }
+        }
+
+        public bool SetPacaniada(ClasamentPacaniada clasament)
+        {
+            string file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.Pacaniada;
+            lock (CoxinoLockObjects.LockPacaniada)
+            {
+                return FileWriter.SaveData(file, clasament, CoxinoLockObjects.LockPacaniada);
+            }
+        }
+
+        public bool SaveShop(List<ShopItem> shopItems)
+        {
+            string file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.Shop;
+            lock (CoxinoLockObjects.LockPacaniada)
+            {
+                return FileWriter.SaveData(file, shopItems, CoxinoLockObjects.LockPacaniada);
             }
         }
 
@@ -82,6 +112,18 @@ namespace MemoryManipulator
             return FileWriter.SaveData(file, liga, GinionistiiLock.LockLigaFile);
         }
 
+        public void BroadcastMessage(string userName, string message)
+        {
+            string file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.Broadcasts;
+            FileWriter.SaveData(file, new { userName = userName, message = message }, CoxinoLockObjects.BroadcastFile);
+        }
+
+        public object GetBroadcasts()
+        {
+            string file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.Broadcasts;
+            return FileReader.ReadFile<List<object>>(file) ?? new object { };
+        }
+
         public bool StergeUserDinLiga(LigaUser user)
         {
             var liga = GetLiga();
@@ -94,12 +136,12 @@ namespace MemoryManipulator
             return FileWriter.SaveData(file, liga, GinionistiiLock.LockLigaFile);
         }
 
-        public List<BettingModel> GetLiveBeting()
+        public BettingModel GetLiveBeting()
         {            
             string file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LiveBetting;
             lock (CoxinoLockObjects.BettingFile)
             {
-                return FileReader.ReadFile<List<BettingModel>>(file) ?? new List<BettingModel>();
+                return FileReader.ReadFile<BettingModel>(file) ?? new BettingModel();
             }
         }
 
@@ -109,7 +151,7 @@ namespace MemoryManipulator
             FileWriter.SaveData(file, cd, CoxinoLockObjects.CooldownFile);            
         }
 
-        public void SaveLiveBetting(List<BettingModel> bettingModel)
+        public void SaveLiveBetting(BettingModel bettingModel)
         {
             string file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LiveBetting;
             FileWriter.SaveData(file, bettingModel, CoxinoLockObjects.BettingFile);           

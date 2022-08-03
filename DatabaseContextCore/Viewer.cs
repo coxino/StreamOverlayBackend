@@ -12,11 +12,15 @@ namespace DatabaseContext
         private string id;
         private string name;
         private int inventory;
+        private int broadcastMessageCount;
         private string email;
         private string ipadress;
         private DateTime creationTime;
         private string superbetName;
         private DateTime lastActive;
+        private MemberLevels memberLevel;
+        private bool isActive;
+        private DateTime expiresMember;
 
         public Viewer()
         {
@@ -30,6 +34,10 @@ namespace DatabaseContext
         public DateTime CreationTime { get => creationTime; set => creationTime = value; }
         public string SuperbetName { get => superbetName; set => superbetName = value; }
         public DateTime LastActive { get => lastActive; set => lastActive = value; }
+        public MemberLevels MemberLevel { get => memberLevel; set => memberLevel = value; }
+        public int BroadcastMessageCount { get => broadcastMessageCount; set => broadcastMessageCount = value; }
+        public bool IsActive { get => isActive; set => isActive = value; }
+        public DateTime ExpiresMember { get => expiresMember; set => expiresMember = value; }
 
         public override bool Equals(object obj)
         {
@@ -42,11 +50,15 @@ namespace DatabaseContext
                    id == other.id &&
                    name == other.name &&
                    inventory == other.inventory &&
+                   broadcastMessageCount == other.broadcastMessageCount &&
                    email == other.email &&
                    ipadress == other.ipadress &&
                    creationTime == other.creationTime &&
                    superbetName == other.superbetName &&
                    lastActive == other.lastActive &&
+                   memberLevel == other.memberLevel &&
+                   isActive == other.isActive &&
+                   expiresMember == other.expiresMember &&
                    Id == other.Id &&
                    Name == other.Name &&
                    Inventory == other.Inventory &&
@@ -54,7 +66,11 @@ namespace DatabaseContext
                    Ipadress == other.Ipadress &&
                    CreationTime == other.CreationTime &&
                    SuperbetName == other.SuperbetName &&
-                   LastActive == other.LastActive;
+                   LastActive == other.LastActive &&
+                   MemberLevel == other.MemberLevel &&
+                   BroadcastMessageCount == other.BroadcastMessageCount &&
+                   IsActive == other.IsActive &&
+                   ExpiresMember == other.ExpiresMember;
         }
 
         public override int GetHashCode()
@@ -63,11 +79,15 @@ namespace DatabaseContext
             hash.Add(id);
             hash.Add(name);
             hash.Add(inventory);
+            hash.Add(broadcastMessageCount);
             hash.Add(email);
             hash.Add(ipadress);
             hash.Add(creationTime);
             hash.Add(superbetName);
             hash.Add(lastActive);
+            hash.Add(memberLevel);
+            hash.Add(isActive);
+            hash.Add(expiresMember);
             hash.Add(Id);
             hash.Add(Name);
             hash.Add(Inventory);
@@ -76,6 +96,10 @@ namespace DatabaseContext
             hash.Add(CreationTime);
             hash.Add(SuperbetName);
             hash.Add(LastActive);
+            hash.Add(MemberLevel);
+            hash.Add(BroadcastMessageCount);
+            hash.Add(IsActive);
+            hash.Add(ExpiresMember);
             return hash.ToHashCode();
         }
     }
