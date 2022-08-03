@@ -3,31 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CreatorDeprecated", "Creator\CreatorDeprecated.csproj", "{4C340F53-BE74-4935-A9DF-0FECCFE44281}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataLayer", "DataLayer\DataLayer.csproj", "{8FB57A56-DAE2-487F-8BE1-977905664443}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Settings", "Settings\Settings.csproj", "{1F62A0ED-F902-480F-A90C-D6CD463C58A6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamApi", "StreamApi\StreamApi.csproj", "{90901F6B-10FD-4695-B5DE-8A8C3BD0D633}"
 EndProject
-Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "streamagDatabase", "streamagDatabase\streamagDatabase.sqlproj", "{67071A8D-0BA8-43F0-ABDF-18B671EB9B6B}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "gamemanager", "gamemanager\gamemanager.csproj", "{4BCDE7C7-E57A-4E6E-A1CA-408332677D1C}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatabaseContextCore", "DatabaseContextCore\DatabaseContextCore.csproj", "{7695F885-AD47-45DB-8CE2-3FC173335679}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LocalDatabseManagerCore", "LocalDatabseManagerCore\LocalDatabseManagerCore.csproj", "{30CF5491-8C90-4FBA-94AE-A70F9FC7F4F3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LocalJSONWriter", "LocalJSONWriter\LocalJSONWriter.csproj", "{7B31C2D7-F439-4C36-B1A4-D98A0C2609BD}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemoryManipulator", "MemoryManipulator\MemoryManipulator.csproj", "{2C0C7C77-F538-4C62-8225-F893C1B6D8A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLContextManager", "SQLContextManager\SQLContextManager.csproj", "{91491FC2-8194-43E6-ACCA-B6ADE6E8C310}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLContextManager", "SQLContextManager\SQLContextManager.csproj", "{91491FC2-8194-43E6-ACCA-B6ADE6E8C310}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JWTManager", "JWTManager\JWTManager.csproj", "{E2A600FA-47AA-4DCD-8394-EA8066F3BFC9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoxiLoger", "CoxiLoger\CoxiLoger.csproj", "{D2A0A36B-2D05-4ACF-862F-8570BBA0B286}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JWTManager", "JWTManager\JWTManager.csproj", "{E2A600FA-47AA-4DCD-8394-EA8066F3BFC9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,11 +26,6 @@ Global
 		XDebug|Any CPU = XDebug|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4C340F53-BE74-4935-A9DF-0FECCFE44281}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4C340F53-BE74-4935-A9DF-0FECCFE44281}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4C340F53-BE74-4935-A9DF-0FECCFE44281}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4C340F53-BE74-4935-A9DF-0FECCFE44281}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4C340F53-BE74-4935-A9DF-0FECCFE44281}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8FB57A56-DAE2-487F-8BE1-977905664443}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8FB57A56-DAE2-487F-8BE1-977905664443}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FB57A56-DAE2-487F-8BE1-977905664443}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -59,21 +44,6 @@ Global
 		{90901F6B-10FD-4695-B5DE-8A8C3BD0D633}.Release|Any CPU.Build.0 = Release|Any CPU
 		{90901F6B-10FD-4695-B5DE-8A8C3BD0D633}.XDebug|Any CPU.ActiveCfg = XDebug|Any CPU
 		{90901F6B-10FD-4695-B5DE-8A8C3BD0D633}.XDebug|Any CPU.Build.0 = XDebug|Any CPU
-		{67071A8D-0BA8-43F0-ABDF-18B671EB9B6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{67071A8D-0BA8-43F0-ABDF-18B671EB9B6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{67071A8D-0BA8-43F0-ABDF-18B671EB9B6B}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{67071A8D-0BA8-43F0-ABDF-18B671EB9B6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{67071A8D-0BA8-43F0-ABDF-18B671EB9B6B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{67071A8D-0BA8-43F0-ABDF-18B671EB9B6B}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{67071A8D-0BA8-43F0-ABDF-18B671EB9B6B}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
-		{67071A8D-0BA8-43F0-ABDF-18B671EB9B6B}.XDebug|Any CPU.Build.0 = Debug|Any CPU
-		{67071A8D-0BA8-43F0-ABDF-18B671EB9B6B}.XDebug|Any CPU.Deploy.0 = Debug|Any CPU
-		{4BCDE7C7-E57A-4E6E-A1CA-408332677D1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4BCDE7C7-E57A-4E6E-A1CA-408332677D1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4BCDE7C7-E57A-4E6E-A1CA-408332677D1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4BCDE7C7-E57A-4E6E-A1CA-408332677D1C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4BCDE7C7-E57A-4E6E-A1CA-408332677D1C}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4BCDE7C7-E57A-4E6E-A1CA-408332677D1C}.XDebug|Any CPU.Build.0 = Debug|Any CPU
 		{7695F885-AD47-45DB-8CE2-3FC173335679}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7695F885-AD47-45DB-8CE2-3FC173335679}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7695F885-AD47-45DB-8CE2-3FC173335679}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -86,12 +56,6 @@ Global
 		{30CF5491-8C90-4FBA-94AE-A70F9FC7F4F3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{30CF5491-8C90-4FBA-94AE-A70F9FC7F4F3}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
 		{30CF5491-8C90-4FBA-94AE-A70F9FC7F4F3}.XDebug|Any CPU.Build.0 = Debug|Any CPU
-		{7B31C2D7-F439-4C36-B1A4-D98A0C2609BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7B31C2D7-F439-4C36-B1A4-D98A0C2609BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7B31C2D7-F439-4C36-B1A4-D98A0C2609BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7B31C2D7-F439-4C36-B1A4-D98A0C2609BD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7B31C2D7-F439-4C36-B1A4-D98A0C2609BD}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7B31C2D7-F439-4C36-B1A4-D98A0C2609BD}.XDebug|Any CPU.Build.0 = Debug|Any CPU
 		{2C0C7C77-F538-4C62-8225-F893C1B6D8A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2C0C7C77-F538-4C62-8225-F893C1B6D8A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C0C7C77-F538-4C62-8225-F893C1B6D8A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -110,12 +74,6 @@ Global
 		{E2A600FA-47AA-4DCD-8394-EA8066F3BFC9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E2A600FA-47AA-4DCD-8394-EA8066F3BFC9}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E2A600FA-47AA-4DCD-8394-EA8066F3BFC9}.XDebug|Any CPU.Build.0 = Debug|Any CPU
-		{D2A0A36B-2D05-4ACF-862F-8570BBA0B286}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D2A0A36B-2D05-4ACF-862F-8570BBA0B286}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D2A0A36B-2D05-4ACF-862F-8570BBA0B286}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D2A0A36B-2D05-4ACF-862F-8570BBA0B286}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D2A0A36B-2D05-4ACF-862F-8570BBA0B286}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D2A0A36B-2D05-4ACF-862F-8570BBA0B286}.XDebug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
