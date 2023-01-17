@@ -14,8 +14,36 @@ using System.Threading.Tasks;
 
 namespace StreamApi
 {
+
+#if DEBUG
     public class Program
     {
+
+        public static void Main(string[] args) =>
+        new WebHostBuilder()
+            .UseKestrel(config =>
+            {
+                //config.ConfigureHttpsDefaults(config =>
+                //{
+                //    config.ServerCertificate = new X509Certificate2(@"D:\certificate.pfx", "cosminR32", X509KeyStorageFlags.DefaultKeySet);
+                //    config.SslProtocols = SslProtocols.Tls12;
+                //});
+            })
+            .UseContentRoot(Directory.GetCurrentDirectory())
+            .UseConfiguration(new ConfigurationBuilder()
+                        .SetBasePath(Directory.GetCurrentDirectory())
+                        .AddJsonFile("appsettings.json")
+                        .Build())
+            .UseIISIntegration()
+            .UseStartup<Startup>()
+            .UseUrls("http://localhost:5000/")
+            .Build()
+            .Run();
+    }
+#else
+    public class Program
+    {
+
         public static void Main(string[] args) =>           
         new WebHostBuilder()
             .UseKestrel(config=>
@@ -37,4 +65,5 @@ namespace StreamApi
             .Build()            
             .Run();
     }
+#endif
 }
