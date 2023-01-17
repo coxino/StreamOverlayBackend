@@ -11,9 +11,10 @@ namespace DatabaseContext
     {
         private string id;
         private string name;
-        private int inventory;
+        private int userCox;
         private int broadcastMessageCount;
         private string email;
+        private string emailSecundar;
         private string ipadress;
         private DateTime creationTime;
         private string superbetName;
@@ -24,11 +25,12 @@ namespace DatabaseContext
 
         public Viewer()
         {
+
         }
 
         public string Id { get => id; set => id = value; }
         public string Name { get => name; set => name = value; }
-        public int Inventory { get => inventory; set => inventory = value; }
+        public int UserCox { get => userCox; set => userCox = value; }
         public string Email { get => email; set => email = value; }
         public string Ipadress { get => ipadress; set => ipadress = value; }
         public DateTime CreationTime { get => creationTime; set => creationTime = value; }
@@ -38,6 +40,7 @@ namespace DatabaseContext
         public int BroadcastMessageCount { get => broadcastMessageCount; set => broadcastMessageCount = value; }
         public bool IsActive { get => isActive; set => isActive = value; }
         public DateTime ExpiresMember { get => expiresMember; set => expiresMember = value; }
+        public string EmailSecundar { get => emailSecundar; set => emailSecundar = value; }
 
         public override bool Equals(object obj)
         {
@@ -49,9 +52,10 @@ namespace DatabaseContext
             return other != null &&
                    id == other.id &&
                    name == other.name &&
-                   inventory == other.inventory &&
+                   userCox == other.userCox &&
                    broadcastMessageCount == other.broadcastMessageCount &&
                    email == other.email &&
+                   emailSecundar == other.emailSecundar &&
                    ipadress == other.ipadress &&
                    creationTime == other.creationTime &&
                    superbetName == other.superbetName &&
@@ -61,7 +65,7 @@ namespace DatabaseContext
                    expiresMember == other.expiresMember &&
                    Id == other.Id &&
                    Name == other.Name &&
-                   Inventory == other.Inventory &&
+                   UserCox == other.UserCox &&
                    Email == other.Email &&
                    Ipadress == other.Ipadress &&
                    CreationTime == other.CreationTime &&
@@ -70,7 +74,8 @@ namespace DatabaseContext
                    MemberLevel == other.MemberLevel &&
                    BroadcastMessageCount == other.BroadcastMessageCount &&
                    IsActive == other.IsActive &&
-                   ExpiresMember == other.ExpiresMember;
+                   ExpiresMember == other.ExpiresMember &&
+                   EmailSecundar == other.EmailSecundar;
         }
 
         public override int GetHashCode()
@@ -78,9 +83,10 @@ namespace DatabaseContext
             HashCode hash = new HashCode();
             hash.Add(id);
             hash.Add(name);
-            hash.Add(inventory);
+            hash.Add(userCox);
             hash.Add(broadcastMessageCount);
             hash.Add(email);
+            hash.Add(emailSecundar);
             hash.Add(ipadress);
             hash.Add(creationTime);
             hash.Add(superbetName);
@@ -90,7 +96,7 @@ namespace DatabaseContext
             hash.Add(expiresMember);
             hash.Add(Id);
             hash.Add(Name);
-            hash.Add(Inventory);
+            hash.Add(UserCox);
             hash.Add(Email);
             hash.Add(Ipadress);
             hash.Add(CreationTime);
@@ -100,6 +106,7 @@ namespace DatabaseContext
             hash.Add(BroadcastMessageCount);
             hash.Add(IsActive);
             hash.Add(ExpiresMember);
+            hash.Add(EmailSecundar);
             return hash.ToHashCode();
         }
     }

@@ -6,39 +6,41 @@ using System.Threading.Tasks;
 
 namespace DataLayer
 {
-    public class InPlayGame : IEquatable<InPlayGame>
+    public class CupaRomanieGame : IEquatable<CupaRomanieGame>
     {
-        public InPlayGame()
+        public CupaRomanieGame()
         {
-            Game = new Game();
         }
 
         public string PlayerName { get; set; }
-        public string InHuntNumber { get; set; }
         public Game Game { get; set; }
-        public BonusHuntPreInfo BonusHuntPreInfo { get; set; }
+        public bool Calificat { get; set; }
+        public int PayOut { get; set; }
+        public double Bet { get; set; }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as InPlayGame);
+            return Equals(obj as CupaRomanieGame);
         }
 
-        public bool Equals(InPlayGame other)
+        public bool Equals(CupaRomanieGame other)
         {
             return other != null &&
                    PlayerName == other.PlayerName &&
-                   InHuntNumber == other.InHuntNumber &&
                    EqualityComparer<Game>.Default.Equals(Game, other.Game) &&
-                   EqualityComparer<BonusHuntPreInfo>.Default.Equals(BonusHuntPreInfo, other.BonusHuntPreInfo);
+                   Calificat == other.Calificat &&
+                   PayOut == other.PayOut &&
+                   Bet == other.Bet;
         }
 
         public override int GetHashCode()
         {
-            int hashCode = -2018858790;
+            int hashCode = -115051861;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(PlayerName);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(InHuntNumber);
             hashCode = hashCode * -1521134295 + EqualityComparer<Game>.Default.GetHashCode(Game);
-            hashCode = hashCode * -1521134295 + EqualityComparer<BonusHuntPreInfo>.Default.GetHashCode(BonusHuntPreInfo);
+            hashCode = hashCode * -1521134295 + Calificat.GetHashCode();
+            hashCode = hashCode * -1521134295 + PayOut.GetHashCode();
+            hashCode = hashCode * -1521134295 + Bet.GetHashCode();
             return hashCode;
         }
     }

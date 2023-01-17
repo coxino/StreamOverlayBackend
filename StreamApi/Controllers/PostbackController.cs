@@ -4,6 +4,7 @@ using JWTManager;
 using LocalDatabaseManager;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,22 +37,18 @@ namespace StreamApi.Controllers
             _context = context;
         }
 
-        [HttpPost("deposit")]
-        public async Task<ActionResult<string>> Deposit([FromBody] DepositModel userModel)
+        [HttpGet("register")]
+        public ActionResult<string> Register([FromQuery] string s2s, [FromQuery] string registration_id)
         {
-            return "ai primit cox";
+            System.IO.File.AppendAllText(@"C:\POSTBACK\REGS.txt", "\r\n[" + DateTime.Now + "] registration_id = " + registration_id + " s2s = " + s2s);
+            return "registration_id = " + registration_id + "  s2s = " + s2s;
         }
 
-        [HttpPost("register")]
-        public async Task<ActionResult<string>> Register([FromBody] RegisterModel registerModel)
+        [HttpGet("ftd")]
+        public ActionResult<string> ftd([FromQuery] string s2s, [FromQuery] string deposit_id, [FromQuery] string amount)
         {
-            var db = await UserDatabase.GetDatabaseAsync(registerModel.userUpdateModel.token, _context);
-            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            {
-                return await db.RegisterNewViewerFromChat(registerModel.userUpdateModel.userID, "coxino", 25);
-            }
-
-            return "Din pacate nu am putut credita coxul :/";
+            System.IO.File.AppendAllText(@"C:\POSTBACK\FTD.txt", "\r\n[" + DateTime.Now + "] deposit_id = " + deposit_id + " s2s = " + s2s + " amount = " + amount);
+            return "deposit_id = " + deposit_id + " amount = " + amount + "  s2s = " + s2s;
         }
     }
 }

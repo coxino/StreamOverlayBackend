@@ -4,6 +4,7 @@ using JWTManager;
 using LocalDatabaseManager;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using StaticDatabase;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,12 +31,43 @@ namespace StreamApi.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<bool>> SetAsync([FromBody]InPlayGame inPlayGame,[FromHeader] string token)
+        public async Task<ActionResult<bool>> SetAsync([FromBody] InPlayGame inPlayGame, [FromHeader] int betSize, [FromHeader] string token)
         {
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
                 db.SetInplayGame(inPlayGame);
+
+                if (AllGamesDatabase.AllGames.Any(x => x.Game.Name == inPlayGame.Game.Name && x.PlayerName == inPlayGame.PlayerName))
+                {
+                    db.AddSingleGameToBH(inPlayGame, betSize);
+                    AllGamesDatabase.AllGames.FirstOrDefault(x => x.Game.Name == inPlayGame.Game.Name && x.PlayerName == inPlayGame.PlayerName).Bet = betSize;
+                }
+
+            }
+
+            return true;
+        }
+
+        [HttpPost("calificaJoc")]
+        public async Task<ActionResult<bool>> SetAsync([FromBody] CupaRomanieGame game, [FromHeader] string token)
+        {
+            var db = await UserDatabase.GetDatabaseAsync(token, _context);
+            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
+            {
+                var joc = AllGamesDatabase.AllGames.Where(x => x.Game.Name == game.Game.Name && x.PlayerName == game.PlayerName).FirstOrDefault();
+                AllGamesDatabase.AllGames.Remove(joc);
+                AllGamesDatabase.AllGames.Add(game);
+                AllGamesDatabase.SaveGames();
+
+                var bh = db.GetLiveBonusHunt();
+                if(bh.Bonuses.Any(x=>x.GameName == game.Game.Name && x.PlayerName == game.PlayerName))
+                {
+                    bh.Bonuses.FirstOrDefault(x => x.GameName == game.Game.Name && x.PlayerName == game.PlayerName).Payed = game.PayOut;
+                    bh.Bonuses.FirstOrDefault(x => x.GameName == game.Game.Name && x.PlayerName == game.PlayerName).BetSize = game.Bet;
+                }
+
+                db.UpdateBonusHunt(bh);
             }
 
             return true;

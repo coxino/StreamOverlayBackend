@@ -48,12 +48,14 @@
     <Compile Include="BonusHuntPreInfo.cs" />
     <Compile Include="BuyTiketModel.cs" />
     <Compile Include="ClasamentPacaniada.cs" />
-    <Compile Include="CoxiUser.cs" />
+    <Compile Include="CupaRomanieGame.cs" />
     <Compile Include="CustomAnimations.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="GiveawayRequestModel.cs" />
     <Compile Include="HotWord.cs" />
     <Compile Include="InPlayGame.cs" />
     <Compile Include="LigaSpecialelorModel.cs" />
+    <Compile Include="LocalUser.cs" />
     <Compile Include="LoyalityRanking.cs" />
     <Compile Include="Meci.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -61,6 +63,7 @@
     <Compile Include="Runda.cs" />
     <Compile Include="SetariTurneu.cs" />
     <Compile Include="ShopItem.cs" />
+    <Compile Include="ShopRequestModel.cs" />
     <Compile Include="SubscriptionModel.cs" />
     <Compile Include="TeamStats.cs" />
     <Compile Include="Tournament.cs" />

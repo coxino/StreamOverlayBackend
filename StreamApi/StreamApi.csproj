@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dynamitey" Version="2.0.10.189" />
+    <PackageReference Include="Json.Net" Version="1.0.33" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Cors" Version="2.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.10" />
@@ -32,6 +33,7 @@
     <ProjectReference Include="..\JWTManager\JWTManager.csproj" />
     <ProjectReference Include="..\LocalDatabseManagerCore\LocalDatabseManagerCore.csproj" />
     <ProjectReference Include="..\SQLContextManager\SQLContextManager.csproj" />
+    <ProjectReference Include="..\Youtube Contractor\Youtube Contractor.csproj" />
   </ItemGroup>
 
 
