@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Youtube_Contractor;
 
 namespace LocalDatabaseManager
 {
@@ -18,11 +19,13 @@ namespace LocalDatabaseManager
 
     public class DatabaseReadWrite
     {
+        private static YoutubeChatWriter youtubeChatWriter;
         private static readonly object SyncRoot = new object();
         private string userID;
 
         public DatabaseReadWrite(string _userId)
         {
+            youtubeChatWriter = new YoutubeChatWriter();
             userID = _userId;
         }
 

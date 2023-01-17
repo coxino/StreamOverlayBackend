@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dynamitey;
+using Settings;
 
 namespace StreamApi.Controllers
 {
@@ -86,6 +87,11 @@ namespace StreamApi.Controllers
         [HttpPost("updateOption")]
         public async Task<ActionResult<string>> UpdateOptionAsync([FromHeader] string token, [FromHeader] string userID, [FromHeader] string bettingOption, [FromHeader] string user, [FromHeader] string amount)
         {
+            if(Settings.ProjectSettings.BettingOff == false)
+            {
+                return $"@{user} Momentan nu este nicun bet activ!";
+            }
+
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
@@ -103,7 +109,8 @@ namespace StreamApi.Controllers
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
-                return $"{userName} ai {(await db.GetCoxiCoinsAsync(userID, "", "", "", userName)).CoxiCoins} cox. Ii poti schimba in premii pe !shop.";
+                var q = await db.GetViewerAsync(userID);
+                return $"{q.Name} ai {q.UserCox} {ProjectSettings.NumePuncteLoialitate}. Ii poti schimba in premii pe !shop.";
             }
             return $"nu am putut seta prezenta...";
         }
@@ -131,43 +138,43 @@ namespace StreamApi.Controllers
             return $"{userName} mai incearca odata...";
         }
 
-        [HttpPost("gamble")]
-        public async Task<ActionResult<string>> Moca2OptionAsync([FromHeader] string token, [FromHeader] string userID, [FromHeader] string user, [FromHeader] int ammount)
-        {
-            var db = await UserDatabase.GetDatabaseAsync(token, _context);
-            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            {
-                if (db.IsUserOnCooldown(userID, "gamble"))
-                {
-                    return $"@{user} poti paria o data la 5 minute!";
-                }
+        //[HttpPost("gamble")]
+        //public async Task<ActionResult<string>> Moca2OptionAsync([FromHeader] string token, [FromHeader] string userID, [FromHeader] string user, [FromHeader] int ammount)
+        //{
+        //    var db = await UserDatabase.GetDatabaseAsync(token, _context);
+        //    if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
+        //    {
+        //        if (db.IsUserOnCooldown(userID, "gamble"))
+        //        {
+        //            return $"@{user} poti paria o data la 5 minute!";
+        //        }
 
-                if (ammount > 1000 || ammount <= 0)
-                {
-                    return $"@{user} poti paria doar intre 1 si 1 000 cox.";
-                }
+        //        if (ammount > 1000 || ammount <= 0)
+        //        {
+        //            return $"@{user} poti paria doar intre 1 si 1 000 {ProjectSettings.NumePuncteLoialitate}.";
+        //        }
 
-                var cc = await db.GetCoxiCoinsAsync(userID, "", "", "", "");
-                if (cc.CoxiCoins < ammount)
-                {
-                    return $"@{user} ai {cc.CoxiCoins} cox nu poti paria {ammount}.";
-                }
+        //        var cc = await db.GetCoxiCoinsAsync(userID, "", "", "", "");
+        //        if (cc.CoxiCoins < ammount)
+        //        {
+        //            return $"@{user} ai doar {cc.CoxiCoins} {ProjectSettings.NumePuncteLoialitate} nu poti paria {ammount}.";
+        //        }
 
-                db.AddUserOnCooldown(userID, "gamble", 5);
-                bool won = new Random().Next(1, 101) < 48;
-                if (won == true)
-                {
-                    await db.RegisterNewViewerFromChat(userID, user, ammount);
-                    return $"@{user} ai pariat {ammount} si a castigat {ammount * 2}! FELIKITARI";
-                }
-                else
-                {
-                    await db.RegisterNewViewerFromChat(userID, user, ammount * -1);
-                    return $"@{user} ai pierdut {ammount} cox! Lasa jocurile ca nu sunt de tine!";
-                }
-            }
-            return $"{user} mai incearca odata...";
-        }
+        //        db.AddUserOnCooldown(userID, "gamble", 5);
+        //        bool won = new Random().Next(1, 101) < 48;
+        //        if (won == true)
+        //        {
+        //            await db.RegisterNewViewerFromChat(userID, user, ammount);
+        //            return $"@{user} ai pariat {ammount} si a castigat {ammount * 2}! FELIKITARI";
+        //        }
+        //        else
+        //        {
+        //            await db.RegisterNewViewerFromChat(userID, user, ammount * -1);
+        //            return $"@{user} ai pierdut {ammount} {ProjectSettings.NumePuncteLoialitate}! Lasa jocurile ca nu sunt de tine!";
+        //        }
+        //    }
+        //    return $"{user} mai incearca odata...";
+        //}
 
         [HttpPost("setwinner")]
         public async Task<ActionResult<string>> SetWinner([FromHeader] string token, [FromHeader] string bettingOption)
@@ -187,11 +194,11 @@ namespace StreamApi.Controllers
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
-                var q = await db.AddPointsToOneUser(userID, ammount / 10);
+                var q = await db.AddPointsToOneUser(userID, ammount);
                 return $"{userName} " + q;
             }
 
-            return string.Format("{0} vezi ca a crapat transferul a {1} de geuri de cox", userName, ammount / 10);
+            return string.Format("{0} vezi ca a crapat transferul a {1} {2}", userName, ammount / 10, ProjectSettings.NumePuncteLoialitate);
         }
 
         [HttpPost("donate")]
@@ -214,15 +221,15 @@ namespace StreamApi.Controllers
                         if (viwers.Where(x => x.Name == userName).Count() == 1)
                         {
 
-                            if (sender.Inventory > ammount)
+                            if (sender.UserCox > ammount)
                             {
                                 await db.AddPointsToOneUser(senderID, -1 * ammount, false);
                                 await db.AddPointsToOneUser(viwers.Where(x => x.Name == userName).FirstOrDefault().Id, ammount, false);
-                                return $"@{userName} ai primit {ammount} cox de la {sender.Name}!";
+                                return $"@{userName} ai primit {ammount} {ProjectSettings.NumePuncteLoialitate} de la {sender.Name}!";
                             }
                             else
                             {
-                                return $"A picat adaugarea a {ammount} cox utilizatorului @{userName} pentru ca sunt prea multi cu acelasi nume, incearca cu ID-ul!";
+                                return $"A picat adaugarea a {ammount} {ProjectSettings.NumePuncteLoialitate} utilizatorului @{userName} pentru ca sunt prea multi cu acelasi nume, incearca cu ID-ul!";
                             }
 
                         }
@@ -231,31 +238,31 @@ namespace StreamApi.Controllers
                             var viewer = await db.GetViewerAsync(userName);
                             if (viewer != null)
                             {
-                                if (sender.Inventory > ammount)
+                                if (sender.UserCox > ammount)
                                 {
                                     await db.AddPointsToOneUser(senderID, -1 * ammount, false);
                                     await db.AddPointsToOneUser(viwers.Where(x => x.Id == userName).FirstOrDefault().Id, ammount, false);
-                                    return $"@{userName} ai primit {ammount} cox de la {sender.Name}!";
+                                    return $"@{userName} ai primit {ammount} {ProjectSettings.NumePuncteLoialitate} de la {sender.Name}!";
                                 }
                                 else
                                 {
-                                    return $"{sender.Name} nu poti trimite {ammount} cox, pentru ca ai doar {sender.Inventory}";
+                                    return $"{sender.Name} nu poti trimite {ammount} {ProjectSettings.NumePuncteLoialitate}, pentru ca ai doar {sender.UserCox}";
                                 }
                             }
                             else
                             {
-                                return $"A picat adaugarea a {ammount} cox utilizatorului @{userName} pentru ca sunt prea multi cu acelasi nume, incearca cu ID-ul!";
+                                return $"A picat adaugarea a {ammount} {ProjectSettings.NumePuncteLoialitate} utilizatorului @{userName} pentru ca sunt prea multi cu acelasi nume, incearca cu ID-ul!";
                             }
                         }
                     }
                     else
                     {
-                        return $"{sender.Name} nu poti trimite {ammount} cox, pentru ca nu esti membru, sau nivelul tau nu permite acest lucru!";
+                        return $"{sender.Name} nu poti trimite {ammount} {ProjectSettings.NumePuncteLoialitate}, pentru ca nu esti membru, sau nivelul tau nu permite acest lucru!";
                     }
                 }
             }
 
-            return string.Format("{0} vezi ca a crapat transferul a {1} de geuri de cox", userName, ammount);
+            return string.Format("{0} vezi ca a crapat transferul a {1} {2}", userName, ammount, ProjectSettings.NumePuncteLoialitate);
         }
 
         [HttpPost("addcox")]
@@ -268,25 +275,25 @@ namespace StreamApi.Controllers
                 var viwers = await db.GetViewerByNameAsync(userName);
                 if (viwers.Where(x => x.Name == userName).Count() == 1)
                 {
-                    var q = await db.AddPointsToOneUser(viwers.Where(x => x.Name == userName).FirstOrDefault().Id, ammount);
-                    return $"@{userName} ai primit {ammount} cox!";
+                    var q = await db.AddPointsToOneUser(viwers.Where(x => x.Name == userName).FirstOrDefault().Id, ammount,false);
+                    return $"@{userName} ai primit {ammount} {ProjectSettings.NumePuncteLoialitate}!";
                 }
                 else
                 {
                     var viewer = await db.GetViewerAsync(userName);
                     if (viewer != null)
                     {
-                        var q = await db.AddPointsToOneUser(viewer.Id, ammount);
-                        return $"{userName} ai primit {ammount} cox!";
+                        var q = await db.AddPointsToOneUser(viewer.Id, ammount, false);
+                        return $"{userName} ai primit {ammount} {ProjectSettings.NumePuncteLoialitate}!";
                     }
                     else
                     {
-                        return $"A picat adaugarea a {ammount} cox utilizatorului @{userName} pentru ca sunt prea multi cu acelasi nume!";
+                        return $"A picat adaugarea a {ammount} {ProjectSettings.NumePuncteLoialitate} utilizatorului @{userName} pentru ca sunt prea multi cu acelasi nume!";
                     }
                 }
             }
 
-            return string.Format("{0} vezi ca a crapat transferul a {1} de geuri de cox", userName, ammount);
+            return string.Format("{0} vezi ca a crapat transferul a {1} {2}", userName, ammount, ProjectSettings.NumePuncteLoialitate);
         }
 
         [HttpPost("twitchEvents")]
@@ -313,46 +320,65 @@ namespace StreamApi.Controllers
         [HttpPost("youtubeEvents")]
         public async Task<ActionResult<string>> YoutubeEvents([FromHeader] string token, [FromHeader] string eventModelJSON)
         {
+            if (eventModelJSON.Contains("\"kind\":\"youtube#liveChatMessage"))
+                return "";
+
             System.IO.File.AppendAllText("c:/logare/youtubeEvents.txt", "\r\n" + DateTime.Now + "\r\n" + eventModelJSON);
-            return Ok("Saved");
+
+            if (eventModelJSON.Contains("\"listener\":\"superchat-latest\""))
+            {
+                try
+                {
+                    object eventObject = Newtonsoft.Json.JsonConvert.DeserializeObject(eventModelJSON);
+                    var data = Dynamic.InvokeGet(eventObject, "event");
+                    var ammount = Dynamic.InvokeGet(data, "amount");
+                    var channel = Dynamic.InvokeGet(eventObject, "authorDetails");
+                    var channelId = Dynamic.InvokeGet(channel, "channelId");
+
+                    var db = await UserDatabase.GetDatabaseAsync(token, _context);
+                    if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
+                    {
+                        await Startup.YoutubeChatWriter.WriteMessageAsync(await db.AddPointsToOneUser(channelId, ammount, true));
+                    }
+                }
+                catch
+                {
+                    System.IO.File.AppendAllText("c:/logare/ytDono.txt", "\r\n" + DateTime.Now + "\r\n" + eventModelJSON);
+                }
+            }
 
 
-           
+            if (eventModelJSON.Contains("\"type\":\"sponsor\"") && eventModelJSON.Contains("\"data\":{\"username\":"))
+            {
+                object eventObject = Newtonsoft.Json.JsonConvert.DeserializeObject(eventModelJSON);
+                var data = Dynamic.InvokeGet(eventObject, "data");
 
-            //object eventModelO = Newtonsoft.Json.JsonConvert.DeserializeObject<object>(eventModel);
+                var id = Dynamic.InvokeGet(data, "providerId");
+                string userName = Dynamic.InvokeGet(data, "username");
+                string level = Dynamic.InvokeGet(data, "tier");
+                DateTime expires = Dynamic.InvokeGet(eventObject, "expiresAt");
 
-            //if (eventModel == null)
-            //    return "error";
+                var db = await UserDatabase.GetDatabaseAsync(token, _context);
+                if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
+                {
+                    var viwers = await db.GetViewerByNameAsync(userName);
+                    if (viwers.Where(x => x.Name == userName || x.Id == userName).Count() == 1)
+                    {
+                        if (await db.SetMemberLevel(viwers.Where(x => x.Name == userName || x.Id == userName).FirstOrDefault().Id, Enum.Parse<MemberLevels>(level), expires))
+                        {
+                            System.IO.File.AppendAllText("c:/logareYT/membrii.txt", $"[{DateTime.Now}] == {id} - {userName} - {level} - {expires} ");
+                            await Startup.YoutubeChatWriter.WriteMessageAsync($"@{userName} acum esti {level}! Multumesc pentru sustinere :_coxPharoh: !");
+                        }
+                        else
+                        {
+                            System.IO.File.AppendAllText("c:/logareYT/failed.txt", $"[{DateTime.Now}] == {id} - {userName} - {level} - {expires} ");
+                            await Startup.YoutubeChatWriter.WriteMessageAsync($"@{userName} din pacate nu a mers sa te promovez la {level}, vorbeste cu un admin.");
+                        }
+                    }
+                }
+            }
 
-            //var eventus = Dynamic.InvokeGet(eventModelO, "event");
-            //if (eventus == null)
-            //    return "error";
-
-            //bool isTest = Dynamic.InvokeGet(eventus, "isTest") ?? false;
-            //if (isTest)
-            //    return "TEST MODE";
-
-            //string userName = Dynamic.InvokeGet(eventus, "name");
-
-            //var db = await UserDatabase.GetDatabaseAsync(token, _context);
-            //if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            //{
-            //    var viwers = await db.GetViewerByNameAsync(userName);
-            //    if (viwers.Where(x => x.Name == userName || x.Id == userName).Count() == 1)
-            //    {
-            //        if (await db.SetMemberLevel(viwers.Where(x => x.Name == userName || x.Id == userName).FirstOrDefault().Id, level))
-            //        {
-            //            return $"@{userName} acum esti {(MemberLevels)level}!";
-            //        }
-            //        else
-            //        {
-            //            return $"A picat promovarea lui @{userName} la {(MemberLevels)level} din motive necunoscute!";
-            //        }
-            //    }
-            //}
-
-            //return $"A picat promovarea lui @{Dynamic.InvokeGet(eventModel, "")} la {(MemberLevels)level} din motive necunoscute!";
-
+            return "DONE";
         }
     }
 }

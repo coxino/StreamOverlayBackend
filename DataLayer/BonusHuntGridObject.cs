@@ -15,6 +15,8 @@ namespace DataLayer
             
         }
 
+        public string PlayerName { get; set; }
+
         public string GameName { get; set; }
 
         public string ProviderName { get; set; }
@@ -46,7 +48,8 @@ namespace DataLayer
 
         public bool Equals(BonusHuntGridObject other)
         {
-            return other != null &&                 
+            return other != null &&
+                   PlayerName == other.PlayerName &&
                    GameName == other.GameName &&
                    ProviderName == other.ProviderName &&
                    BetSize == other.BetSize &&
@@ -58,7 +61,8 @@ namespace DataLayer
 
         public override int GetHashCode()
         {
-            int hashCode = -1614419599;          
+            int hashCode = 1400080776;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(PlayerName);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(GameName);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ProviderName);
             hashCode = hashCode * -1521134295 + BetSize.GetHashCode();

@@ -44,7 +44,7 @@ namespace SQLContextManager
                 var existingChild = user;
                 if (existingChild.LastActive.AddMinutes(15) > DateTime.Now)
                 {
-                    existingChild.Inventory += ammount;
+                    existingChild.UserCox += ammount;
                     _context.Entry(user).CurrentValues.SetValues(existingChild);
                 }
             }
@@ -75,10 +75,10 @@ namespace SQLContextManager
                         case MemberLevels.Coxumator:
                         case MemberLevels.Gangster:
                         case MemberLevels.ElChapo:
-                            existingChild.Inventory += ammount * 2;
+                            existingChild.UserCox += ammount * 2;
                             break;
                         default:
-                            existingChild.Inventory += ammount;
+                            existingChild.UserCox += ammount;
                             break;
                     }                   
                     _context.Entry(user).CurrentValues.SetValues(existingChild);
@@ -222,14 +222,17 @@ namespace SQLContextManager
                     CreationTime = DateTime.Now,
                     Email = "",
                     Id = viewerID,
-                    Inventory = 25,
+                    UserCox = 25,
                     Ipadress = "",
                     MemberLevel = MemberLevels.Viewer,
                     Name = viewerName,
-                    SuperbetName = ""
+                    SuperbetName = "",
+                    IsActive = false,
+                    BroadcastMessageCount = 0,
+                    ExpiresMember = DateTime.Now
                 };
 
-                return await CreateUser(newViewer) ? $"{viewerName} bine ai venit pe live, acum esti inscris(a) in sistemul de loialitate, intra pe https://coxino.ro/shop pentru a schimba coxul cu multe premii" +
+                return await CreateUser(newViewer) ? $"{viewerName} bine ai venit pe live, acum esti inscris(a) in sistemul de loialitate, intra pe https://coxino.ro/shop pentru a castiga multe premii" +
                     $" faine" : $"{viewerName} nu am putut sa te inscriu in sistemul de loialitate. Incearca direct pe site https://coxino.ro/shop";
             }
         }
@@ -283,16 +286,16 @@ namespace SQLContextManager
                     case MemberLevels.Gangster:
                     case MemberLevels.ElChapo:
                         ammount *= 2;
-                        viewer.Inventory += ammount;
+                        viewer.UserCox += ammount;
                         break;
                     default:
-                        viewer.Inventory += ammount;
+                        viewer.UserCox += ammount;
                         break;
                 }
             }
             else
             {
-                viewer.Inventory += ammount;
+                viewer.UserCox += ammount;
             }
                
             return await SaveUser(viewer);
@@ -312,7 +315,15 @@ namespace SQLContextManager
         {
             await  _context.Viewers.AddAsync(viewer);
 
-            return await _context.SaveChangesAsync() > 0;
+            try
+            {
+
+                return await _context.SaveChangesAsync() > 0;
+            }catch(Exception ex)
+            {
+                var x = ex.Message;
+                return false;
+            }
         }
 
         public async Task<int> ReadUserJackpot()
@@ -327,11 +338,11 @@ namespace SQLContextManager
             return await AddPointToViewerAsync(viewer, ammount,doubleUp);
         }
 
-        public async Task<bool> SetUserLevel(string id, int ammount)
+        public async Task<bool> SetUserLevel(string id, MemberLevels level, DateTime expires)
         {
             var viewer = await GetViewerModel(id);
-            viewer.MemberLevel = (MemberLevels)ammount;
-            viewer.ExpiresMember = DateTime.Now.AddDays(31);
+            viewer.MemberLevel = level;
+            viewer.ExpiresMember = expires;
             return await SaveUser(viewer);
         }
     }

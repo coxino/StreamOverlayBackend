@@ -17,6 +17,7 @@ namespace DataLayer
         public string email { get; set; }
         public string ipadress { get; set; }
         public string itemID { get; set; }
+        public string numeItem { get; set; }
         public string numeSuperbet { get; set; }
         public string numeSpeciala { get; set; }
 

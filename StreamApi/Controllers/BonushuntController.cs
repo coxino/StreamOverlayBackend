@@ -3,7 +3,10 @@ using DataLayer;
 using JWTManager;
 using LocalDatabaseManager;
 using Microsoft.AspNetCore.Mvc;
+using StaticDatabase;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace StreamApi.Controllers
@@ -19,9 +22,9 @@ namespace StreamApi.Controllers
             _context = context;
         }
 
-        public BonusHuntFullInfo GetAsync([FromHeader] string token,[FromHeader] string username)
-        {            
-            var bh =  UserDatabase.GetByUsername(username).GetLiveBonusHunt();
+        public BonusHuntFullInfo GetAsync([FromHeader] string token, [FromHeader] string username)
+        {
+            var bh = UserDatabase.GetByUsername(username).GetLiveBonusHunt();
             return bh;
         }
 
@@ -43,13 +46,18 @@ namespace StreamApi.Controllers
         {
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            {
+            {               
                 db.AddSingleGameToBH(gameName, betSize);
             }
 
             return Ok(true);
         }
 
+        [HttpGet("qualifiers")]
+        public ActionResult<object> GetCurrent()
+        {
+            return GiveawayAniversar.CurentUser;
+        }
 
         [HttpPost("delete")]
         public async Task<ActionResult<bool>> Delete([FromHeader] string token, [FromHeader] int bonus)

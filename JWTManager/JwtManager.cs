@@ -1,4 +1,5 @@
 ﻿using DatabaseContext;
+using DataLayer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -26,16 +27,23 @@ namespace JWTManager
 		public Guid UserGuid { get; set; }
 	}
 
-	public class ClaimNames
+	public static class ClaimNames
 	{
 		public static string Username = "Username";
 		public static string Password = "Password";
 		public static string UserId = "UserId";
+
 	}
 	public class JwtManager
 	{
 		private static string mySecret = "bQeThWmZq4t7w!z%C*F-J@NcRfUjXn2r5u8x/A?D(G+KbPdSgVkYp3s6v9y$B&E)H@McQfThWmZq4t7w!z%C*F-JaNdRgUkXn2r5u8x/A?D(G+KbPeShVmYq3s6v9y$B&E)H@McQfTjWnZr4u7w!z%C*F-JaNdRgUkXp2s5v8y/A?D(G+KbPeShVmYq3t6w9z$C&E)H@McQfTjWnZr4u7x!A%D*G-JaNdRgUkXp2s5v8y/B?E(H+MbPeShVmYq3t";
-		public static string GenerateToken(Account user)
+
+        public static bool VerifyViewerToken(LocalUser userData)
+        {
+			return GetClaim(userData.authToken, ClaimNames.Username) == userData.userYoutubeID;
+        }
+
+        public static string GenerateToken(Account user)
 		{
 			var mySecurityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(mySecret));
 
@@ -94,6 +102,11 @@ namespace JWTManager
 
 		public static string GetClaim(string token, string claimType)
 		{
+            if (string.IsNullOrWhiteSpace(token))
+            {
+				return "error";
+            }
+
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var securityToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
 
@@ -179,5 +192,10 @@ namespace JWTManager
 
 			return tt;
 		}
-	}
+
+        public static string GenerateViewerLoginToken(string userYoutubeID)
+        {
+			return GenerateViewerToken(userYoutubeID);
+        }
+    }
 }

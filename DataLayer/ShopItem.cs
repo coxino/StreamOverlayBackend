@@ -21,6 +21,7 @@ namespace DataLayer
         public bool OnlyMembers { get; set; }
         public bool IsVisible { get; set; }
         public double Cooldown { get; set; }
+        public string OptionalData { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -39,12 +40,13 @@ namespace DataLayer
                    RequireAditional == other.RequireAditional &&
                    OnlyMembers == other.OnlyMembers &&
                    IsVisible == other.IsVisible &&
-                   Cooldown == other.Cooldown;
+                   Cooldown == other.Cooldown &&
+                   OptionalData == other.OptionalData;
         }
 
         public override int GetHashCode()
         {
-            int hashCode = 481275201;
+            int hashCode = 1483826258;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ItemID);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Nume);
             hashCode = hashCode * -1521134295 + Pret.GetHashCode();
@@ -55,6 +57,7 @@ namespace DataLayer
             hashCode = hashCode * -1521134295 + OnlyMembers.GetHashCode();
             hashCode = hashCode * -1521134295 + IsVisible.GetHashCode();
             hashCode = hashCode * -1521134295 + Cooldown.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(OptionalData);
             return hashCode;
         }
     }

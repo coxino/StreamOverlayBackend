@@ -3,6 +3,7 @@ using DataLayer;
 using JWTManager;
 using LocalDatabaseManager;
 using Microsoft.AspNetCore.Mvc;
+using Settings;
 using System.Threading.Tasks;
 
 namespace StreamApi.Controllers
@@ -20,14 +21,28 @@ namespace StreamApi.Controllers
         }
 
         [HttpPost("userCoins")]
-        public async Task<CoxiUser> GetAsync([FromBody] UserUpdateModel userData)
+        public async Task<ActionResult<LocalUser>> GetAsync([FromBody] LocalUser userData)
         {
+            if(string.IsNullOrEmpty(userData.authToken) && string.IsNullOrEmpty(userData.userYoutubeID) == false)
+            {
+                //generate token
+                string newToken = JwtManager.GenerateViewerLoginToken(userData.userYoutubeID);
+                userData.authToken = newToken;
+            }
+
+            //isLogin by token
+            if(string.IsNullOrEmpty(userData.authToken) == false && string.IsNullOrEmpty(userData.userYoutubeID))
+            {
+                userData.userYoutubeID = JwtManager.GetClaim(userData.authToken, ClaimNames.Username);
+            }
+
+
             var db = await UserDatabase.GetGivewayDBAsync(_context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
-                return await db.GetCoxiCoinsAsync(userData.userID, userData.email, userData.ipadress,userData.numeSuperbet,userData.username);
+                return Ok(new { localUser = await db.GetCoxiCoinsAsync(userData) });
             }
-            else return new CoxiUser() { CoxiCoins = 0, NumeSuperbet = "" };
+            else return new LocalUser();
         }
 
         [HttpPost("updateuser")]
@@ -47,7 +62,7 @@ namespace StreamApi.Controllers
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
-                return Ok(new { status = await db.AddPointsAllAsync(ammountToAdd) + " de coxati au primit cate " + ammountToAdd + " cocsi"});
+                return Ok(new { status = await db.AddPointsAllAsync(ammountToAdd) + " de persoane au primit cate " + ammountToAdd + " " + ProjectSettings.NumePuncteLoialitate });
             }
 
             return "Nu ati primit puncte ca a crapat";

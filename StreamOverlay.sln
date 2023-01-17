@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31624.102
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32922.545
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataLayer", "DataLayer\DataLayer.csproj", "{8FB57A56-DAE2-487F-8BE1-977905664443}"
 EndProject
@@ -18,6 +18,14 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLContextManager", "SQLContextManager\SQLContextManager.csproj", "{91491FC2-8194-43E6-ACCA-B6ADE6E8C310}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JWTManager", "JWTManager\JWTManager.csproj", "{E2A600FA-47AA-4DCD-8394-EA8066F3BFC9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Youtube Contractor", "Youtube Contractor\Youtube Contractor.csproj", "{06AFE382-82EA-4F7C-AFD8-B5675AE011BB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatBot", "ChatBot\ChatBot.csproj", "{24B1EAD7-0CBA-4869-9B52-6A27CBB43030}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StaticDatabase", "StaticDatabase\StaticDatabase.csproj", "{452EDCF4-5236-4B69-9251-24C8189FAB67}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Email Sender", "Email Sender\Email Sender.csproj", "{CE253CFE-258D-4480-B703-401B8D563409}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -74,6 +82,30 @@ Global
 		{E2A600FA-47AA-4DCD-8394-EA8066F3BFC9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E2A600FA-47AA-4DCD-8394-EA8066F3BFC9}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E2A600FA-47AA-4DCD-8394-EA8066F3BFC9}.XDebug|Any CPU.Build.0 = Debug|Any CPU
+		{06AFE382-82EA-4F7C-AFD8-B5675AE011BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06AFE382-82EA-4F7C-AFD8-B5675AE011BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06AFE382-82EA-4F7C-AFD8-B5675AE011BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06AFE382-82EA-4F7C-AFD8-B5675AE011BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06AFE382-82EA-4F7C-AFD8-B5675AE011BB}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06AFE382-82EA-4F7C-AFD8-B5675AE011BB}.XDebug|Any CPU.Build.0 = Debug|Any CPU
+		{24B1EAD7-0CBA-4869-9B52-6A27CBB43030}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24B1EAD7-0CBA-4869-9B52-6A27CBB43030}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24B1EAD7-0CBA-4869-9B52-6A27CBB43030}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24B1EAD7-0CBA-4869-9B52-6A27CBB43030}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24B1EAD7-0CBA-4869-9B52-6A27CBB43030}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24B1EAD7-0CBA-4869-9B52-6A27CBB43030}.XDebug|Any CPU.Build.0 = Debug|Any CPU
+		{452EDCF4-5236-4B69-9251-24C8189FAB67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{452EDCF4-5236-4B69-9251-24C8189FAB67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{452EDCF4-5236-4B69-9251-24C8189FAB67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{452EDCF4-5236-4B69-9251-24C8189FAB67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{452EDCF4-5236-4B69-9251-24C8189FAB67}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{452EDCF4-5236-4B69-9251-24C8189FAB67}.XDebug|Any CPU.Build.0 = Debug|Any CPU
+		{CE253CFE-258D-4480-B703-401B8D563409}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE253CFE-258D-4480-B703-401B8D563409}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE253CFE-258D-4480-B703-401B8D563409}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE253CFE-258D-4480-B703-401B8D563409}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE253CFE-258D-4480-B703-401B8D563409}.XDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE253CFE-258D-4480-B703-401B8D563409}.XDebug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

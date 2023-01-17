@@ -67,6 +67,11 @@ namespace StreamApi.Controllers
                     {
                         var viewer = await db.GetViewerAsync(viewerID);
 
+                        if(viewer == null)
+                        {
+                          return  givewayViewModels.OrderByDescending(x => x.GivewayModel.EndTime > DateTime.Now).ToList();
+                        }
+
                         if (viewer.MemberLevel >  MemberLevels.Coxumator)
                         {
                             gaw.Price = (int)(gaw.Price * 0.8);
@@ -123,23 +128,23 @@ namespace StreamApi.Controllers
 
 
         [HttpPost("buyTiket")]
-        public async Task<ActionResult<string>> BuyTiketAsync([FromBody] BuyTiketModel buyTiketModel)
+        public async Task<ActionResult<string>> BuyTiketAsync([FromBody] GiveawayRequestModel buyTiketModel)
         {
             var db = await UserDatabase.GetGivewayDBAsync(_context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
-                var utilizator = await db.GetViewerAsync(buyTiketModel.userID);
+                var utilizator = await db.GetViewerAsync(buyTiketModel.localUser.userYoutubeID);
 
                 if (utilizator.IsActive == false)
                 {
                     return BadRequest("Trebuie sa-ti validezi contul sa poti cumpara de pe site!");
                 }
 
-                if (db.IsUserOnCooldown(buyTiketModel.userID, "buyTiket"))
+                if (db.IsUserOnCooldown(buyTiketModel.localUser.userYoutubeID, "buyTiket"))
                 {
                     return "Poti cumpara un ticket la 5 secunde!";
                 }
-                db.AddUserOnCooldown(buyTiketModel.userID, "buyTiket", 0.09);
+                db.AddUserOnCooldown(buyTiketModel.localUser.userYoutubeID, "buyTiket", 0.09);
                 return await db.BuyGiveawayTiket(buyTiketModel);
             }
 

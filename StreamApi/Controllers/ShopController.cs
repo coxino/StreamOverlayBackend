@@ -3,13 +3,16 @@ using DataLayer;
 using JWTManager;
 using LocalDatabaseManager;
 using Microsoft.AspNetCore.Mvc;
+using Settings;
 using SQLContextManager;
+using StaticDatabase;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace StreamApi.Controllers
@@ -51,9 +54,8 @@ namespace StreamApi.Controllers
             return Ok(db.SaveShop(shopItems) ? "ShopSalvat" : "error");
         }
 
-
         [HttpPost("cumpara")]
-        public async Task<ActionResult<string>> BuyItemAsync([FromBody] UserUpdateModel userModel)
+        public async Task<ActionResult<string>> BuyItemAsync([FromBody] ShopRequestModel userModel)
         {
             var db = await UserDatabase.GetGivewayDBAsync(_context);
             if (db.ValidationResponse.ValidationResponse != ValidationResponse.Success)
@@ -61,7 +63,9 @@ namespace StreamApi.Controllers
                 return "Din pacate nu pot valida requestul tau!";
             }
 
-            var utilizator = await db.GetViewerAsync(userModel.userID);
+            var userid = JwtManager.GetClaim(userModel.localUserToken, ClaimNames.Username);
+
+            var utilizator = await db.GetViewerAsync(userid);           
 
             if (utilizator.IsActive == false && utilizator.MemberLevel < MemberLevels.Coxumator)
             {
@@ -69,7 +73,7 @@ namespace StreamApi.Controllers
             }
 
             var shop = await db.GetShopAsync();
-            var item = shop.FirstOrDefault(x => x.ItemID == userModel.itemID);
+            var item = shop.FirstOrDefault(x => x.ItemID == userModel.item.ItemID && x.Nume == userModel.item.Nume);
 
             if (item == null)
             {
@@ -89,9 +93,16 @@ namespace StreamApi.Controllers
                 return "Din pacate produsul nu mai este in stoc!";
             }
 
-            if (db.IsUserOnCooldown(userModel.userID, "shop"))
+            if (db.IsUserOnCooldown(userid, "shop"))
             {
                 return Ok("Poti folosi shopul o data la 5 de secunde!");
+            }
+
+            db.AddUserOnCooldown(userid, "shop", 0.08);
+
+            if (db.IsUserOnCooldown(utilizator.Id, item.ItemID))
+            {
+                return "Mai poti cumpara acest produs la data ora - " + db.GetUserCooldown(utilizator.Id, item.ItemID);
             }
 
             if (utilizator.MemberLevel > MemberLevels.Coxumator)
@@ -99,30 +110,25 @@ namespace StreamApi.Controllers
                 item.Pret = (int)(item.Pret * 0.8);
             }
 
-            if (utilizator.Inventory < item.Pret)
+            if (utilizator.UserCox < item.Pret)
             {
-                return "Nu ai suficient cox pentru acest produs";
+                return $"Nu ai suficiente {ProjectSettings.NumePuncteLoialitate} pentru acest produs";
             }
             else
             {
                 await db.AddPointsToOneUser(utilizator.Id, -1 * item.Pret, false);
             }
 
-            db.AddUserOnCooldown(userModel.userID, "shop", 0.08);
-
-            if (db.IsUserOnCooldown(utilizator.Id, item.ItemID))
-            {
-                return "Mai poti cumpara acest produs la data ora - " + db.GetUserCooldown(utilizator.Id, item.ItemID);
-            }
-
             db.AddUserOnCooldown(utilizator.Id, item.ItemID, item.Cooldown);
 
             if (item.ItemID == "mystery2")
             {
-                int number = new Random().Next(0, 10);
-                if (number == 6)
+                int number = new Random().Next(0, 11);
+                if (number == 4)
                 {
                     db.RedeemItem(utilizator, item, "50 SHINING CROWN");
+                    System.IO.File.AppendAllText(@"C:\StreamOverlay\assets\img\test.txt", "\r\n " + utilizator.Name);
+                    await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} tocmai a castigat 50 RON rulaj 1x din [{item.Nume}] pe !shop incearca si tu.");
                     return Ok("Ai primit 50RON SHINING CROWN! Nu uita sa-ti completezi numele de la superbet!");
                 }
                 else
@@ -137,6 +143,7 @@ namespace StreamApi.Controllers
                 if (number == 14)
                 {
                     db.RedeemItem(utilizator, item, "50 SHINING");
+                    await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} tocmai a castigat 50 RON rulaj 1x din [{item.Nume}] pe !shop incearca si tu.");
                     return Ok("Ai primit 50RON SHINING CROWN! Nu uita sa-ti completezi numele de la superbet!");
                 }
                 else
@@ -147,41 +154,27 @@ namespace StreamApi.Controllers
 
             if (item.ItemID == "gift100")
             {         
-                int number = new Random().Next(0, 100);
-                if (number == 14)
+                int number = new Random().Next(0, 300);               
+
+                if (number < 150)
                 {
-                    db.RedeemItem(utilizator, item, "50 SHINING CROWN");
-                    return Ok("Ai primit 50SHINING CROWN!");
+                    return await db.WinPointsAsync(utilizator, 50);
                 }
 
-                if (number == 11)
-                {
-                    return await db.WinPointsAsync(utilizator, 1000);
-                }
-
-                if (number >= 50)
-                {
-                    return await db.WinPointsAsync(utilizator, 150);
-                }
-
-                if (number >= 75)
+                if (number < 250)
                 {
                     return await db.WinPointsAsync(utilizator, 100);
                 }
 
-                if (number > 14)
-                {
-                    return await db.WinPointsAsync(utilizator, 50);
-                }
-                if (number < 14)
+                if (number < 300)
                 {
                     return await db.WinPointsAsync(utilizator, 250);
-                }
-                
+                }                
             }
 
 
-            return db.RedeemItem(utilizator, item, userModel.numeSpeciala);
+            await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} tocmai a cumparat [{item.Nume}] de pe !shop, strange {ProjectSettings.NumePuncteLoialitate} si cumpara si tu.");
+            return db.RedeemItem(utilizator, item, userModel.item.OptionalData);
         }
 
         [HttpGet("validare")]
@@ -221,7 +214,7 @@ namespace StreamApi.Controllers
             var db = await UserDatabase.GetGivewayDBAsync(_context);
             if (db.IsUserOnCooldown(userID, "validare"))
             {
-                return Ok("Trebuie sa astepti 5 minute ca sa mai poti genera un email de validare, verifica si spam-ul intre timp.");
+                return Ok(new { msg = "Trebuie sa astepti 5 minute ca sa mai poti genera un email de validare, verifica si spam-ul intre timp." });
             }
             else
             {
@@ -230,18 +223,28 @@ namespace StreamApi.Controllers
 
             var user = await db.GetViewerAsync(userID);
 
+            if(user == null)
+            {
+                return Ok(new { msj = "Nu pot gasi contul in baza de date!" }); ;
+            }
+
             if(user.IsActive == true)
             {
-                return Ok("Contul a fost deja validat!.");
+                return Ok(new { msj = "Contul a fost deja validat!." });
             }
 
             if (user != null)
             {
                 var code = JwtManager.GenerateViewerToken(userID);
-                Email(user.Email, generateEmail(code, user.Name));
+                Email(user.Email, generateEmail(code, user.Name), "Validare cont coxino.ro");
+                if (string.IsNullOrWhiteSpace(user.EmailSecundar) == false)
+                {
+                    Email(user.EmailSecundar, generateEmail(code, user.Name), "Validare cont coxino.ro");
+                    return Ok(new { msg = $"Am trimis e-mail-ul pe adresele {user.EmailSecundar} si {user.Email}, poate dura pana la 5 minute. Verifica si spam!" });
+                }
             }
 
-            return "done";
+            return Ok(new { msg = $"Am trimis e-mail-ul pe adresa {user.Email}, poate dura pana la 5 minute. Verifica si spam!" });
         }
 
         private string generateEmail(string code, string name)
@@ -250,12 +253,12 @@ namespace StreamApi.Controllers
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"<h1>Salut {name} </h1>");
             var q = System.IO.File.ReadAllText(@"C:\oferta\oferta1.txt");
-            sb.AppendLine(q);
             sb.AppendLine($"<h2>Pentru a activa contul este necesar sa dai click <b> <a href='{link}{code}'>AICI</a> </b><br></h2>");
+            sb.AppendLine(q);
             return sb.ToString();
         }
 
-        public static void Email(string toEmail, string htmlString)
+        public static void Email(string toEmail, string htmlString, string subject)
         {
             try
             {
@@ -263,7 +266,7 @@ namespace StreamApi.Controllers
                 SmtpClient smtp = new SmtpClient();
                 message.From = new MailAddress("noreply@coxino.ro");
                 message.To.Add(new MailAddress(toEmail));
-                message.Subject = "Validare Cont Coxino.ro";
+                message.Subject = subject;
                 message.IsBodyHtml = true; //to make message body as html  
                 message.Body = htmlString;
                 smtp.Port = 26;

@@ -8,6 +8,14 @@ namespace Settings
 {
     public class ProjectSettings
     {
+        public static bool BettingOff
+        {
+            get
+            {
+                return bool.Parse(System.IO.File.ReadAllText(@"C:\API\database\coxino\betting.txt"));
+            }
+        }
+
         public static string DatabaseFolder = "C:/API/database/";
         public static string User_folder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
@@ -49,5 +57,7 @@ namespace Settings
         public static string AllGamesOnDebug = @"C:\StreamOverlay\assets\database\AllGames.json";
 
         public static string Pacaniada = @"/pacaniada.json";
+
+        public static string NumePuncteLoialitate = "puncte";
     }
 }

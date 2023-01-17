@@ -6,6 +6,7 @@ using MemoryManipulator;
 using Newtonsoft.Json;
 using Settings;
 using SQLContextManager;
+using StaticDatabase;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +14,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Youtube_Contractor;
 
 namespace LocalDatabaseManager
 {
@@ -87,6 +89,10 @@ namespace LocalDatabaseManager
             else
             {
                 var viewr = await GetViewerAsync(userYoutubeID) ?? null;
+
+                if (viewr == null)
+                    return shop;
+
                 if(viewr.MemberLevel > MemberLevels.Coxumator)
                 {
                     foreach(var item in shop)
@@ -104,10 +110,10 @@ namespace LocalDatabaseManager
             MemoryManager.SaveLiveBetting(bettingModel);
         }
 
-        public async Task<string> BuyGiveawayTiket(BuyTiketModel buyTiketModel)
+        public async Task<string> BuyGiveawayTiket(GiveawayRequestModel buyTiketModel)
         {
-            var viewer = await SQLContextManager.GetViewerModel(buyTiketModel.userID);
-            GivewayModel giveway = await SQLContextManager.GetGivewayModel(buyTiketModel.givewayID);
+            var viewer = await SQLContextManager.GetViewerModel(buyTiketModel.localUser.userYoutubeID);
+            GivewayModel giveway = await SQLContextManager.GetGivewayModel(buyTiketModel.giveawayId);
 
             var userTikets = await SQLContextManager.GetViewerGivewayTokens(viewer.Id, giveway.Id);
 
@@ -119,9 +125,9 @@ namespace LocalDatabaseManager
 
             if (viewer.MemberLevel > MemberLevels.Coxumator)
             {
-                if (viewer.Inventory < giveway.Price * 0.8)
+                if (viewer.UserCox < giveway.Price * 0.8)
                 {
-                    return "Nu ai destul cox! Stai pe live si aduna cox!";
+                    return $"Nu ai destul cox! Stai pe live si aduna {ProjectSettings.NumePuncteLoialitate}!";
                 }
 
                 if (await SQLContextManager.CreateGivewayTiket(viewer, giveway))
@@ -137,9 +143,9 @@ namespace LocalDatabaseManager
             }
             else
             {
-                if (viewer.Inventory < giveway.Price)
+                if (viewer.UserCox < giveway.Price)
                 {
-                    return "Nu ai destule cox! Stai pe live si aduna cox!";
+                    return $"Nu ai destule cox! Stai pe live si aduna {ProjectSettings.NumePuncteLoialitate}!";
                 }
 
                 if (await SQLContextManager.CreateGivewayTiket(viewer, giveway))
@@ -186,48 +192,58 @@ namespace LocalDatabaseManager
             return await SQLContextManager.GetViewerModel(viewerID) ?? null;
         }
 
-        public async Task<CoxiUser> GetCoxiCoinsAsync(string userID, string email, string ipadress, string numeSuperbet,string nume)
+        public async Task<LocalUser> GetCoxiCoinsAsync(LocalUser localUser)
         {
-            var user = await SQLContextManager.GetViewerModel(userID);
+            var user = await SQLContextManager.GetViewerModel(localUser.userYoutubeID);
 
             if (user == null)
             {
                 user = new Viewer()
                 {
-                    Name = nume,
-                    Id = userID,
-                    Inventory = 25,
-                    Email = email,
-                    Ipadress = ipadress,
+                    Name = localUser.userName,
+                    Id = localUser.userYoutubeID,
+                    UserCox = 25,
+                    Email = localUser.userEmail,
+                    EmailSecundar = localUser.userEmailSecundar,
+                    Ipadress = localUser.userIP,
                     CreationTime = DateTime.Now,
-                    SuperbetName = numeSuperbet,
+                    SuperbetName = localUser.superbetName,
                     LastActive = DateTime.Now,
-                    MemberLevel = MemberLevels.Viewer
+                    MemberLevel = MemberLevels.Viewer,
+                    IsActive = false,
+                    ExpiresMember = DateTime.Now
                 };
                 if (await SaveLoyaltyAsync(user))
                 {
-                    return new CoxiUser() { CoxiCoins = user.Inventory,NumeSuperbet = user.SuperbetName };
+                    return LocalUserFrom(user,JwtManager.GenerateViewerToken(localUser.userYoutubeID));
                 }
             }
             else
             {
                 bool save = false;
-                if (string.IsNullOrWhiteSpace(user.Email) && string.IsNullOrWhiteSpace(email) == false)
+                if (string.IsNullOrWhiteSpace(user.Email) && string.IsNullOrWhiteSpace(localUser.userEmail) == false)
                 {
-                    user.Email = email;
-                    save = true;
-                }
-                if (string.IsNullOrWhiteSpace(user.Ipadress) && string.IsNullOrWhiteSpace(ipadress) == false)
-                {
-                    user.Ipadress = ipadress;
+                    user.Email = localUser.userEmail;
                     save = true;
                 }
 
-                if (string.IsNullOrWhiteSpace(numeSuperbet) == false)
+                if(string.IsNullOrWhiteSpace(localUser.userEmailSecundar) == false)
                 {
-                    if (user.SuperbetName != numeSuperbet)
+                    user.EmailSecundar = localUser.userEmailSecundar;
+                    save = true;
+                }
+
+                if (string.IsNullOrWhiteSpace(user.Ipadress) && string.IsNullOrWhiteSpace(localUser.userIP) == false)
+                {
+                    user.Ipadress = localUser.userIP;
+                    save = true;
+                }
+
+                if (string.IsNullOrWhiteSpace(localUser.superbetName) == false)
+                {
+                    if (user.SuperbetName != localUser.superbetName)
                     {
-                        user.SuperbetName = numeSuperbet;
+                        user.SuperbetName = localUser.superbetName;
                         save = true;
                     }
                 }
@@ -239,12 +255,31 @@ namespace LocalDatabaseManager
 
             }
 
-            return new CoxiUser() { CoxiCoins = user.Inventory, NumeSuperbet = user.SuperbetName,isActive = user.IsActive };
+            return LocalUserFrom(user,localUser.authToken);
+        }
+
+        private LocalUser LocalUserFrom(Viewer user, string authToken)
+        {
+            return new LocalUser()
+            {
+                isActive = user.IsActive,
+                coxiPoints = user.UserCox,
+                superbetName = user.SuperbetName,
+                userEmail = user.Email,
+                userEmailSecundar = user.EmailSecundar,
+                userName = user.Name,
+                userYoutubeID = user.Id,
+                userIP = user.Ipadress,
+                isSubscribed = true,
+                photoURL = "",
+                authToken = authToken
+            };
         }
 
         public async Task<string> WinPointsAsync(Viewer utilizator, int ammount)
         {
-            return await SQLContextManager.AddPointToViewerAsync(utilizator, ammount,false) ? $"Ai primit {ammount} de cox!" : $"Din pacate nu a reusit transferul a {ammount}";
+            await new YoutubeChatWriter().WriteMessageAsync($"@{utilizator.Name} tocmai a castigat {ammount} {ProjectSettings.NumePuncteLoialitate} pe !shop.");
+            return await SQLContextManager.AddPointToViewerAsync(utilizator, ammount,false) ? $"Ai primit {ammount} de {ProjectSettings.NumePuncteLoialitate}!" : $"Din pacate nu a reusit transferul a {ammount}";
         }
 
         public List<LigaUser> GetLiga()
@@ -259,12 +294,12 @@ namespace LocalDatabaseManager
 
         public string RedeemItem(Viewer user, ShopItem item, string additionaldata = "")
         {
-            string redeemer = string.Format("[{0}]-[USERID:{1}]-[NUME UTILIZATOR:{2}]-[PRODUS:{3}]-[ADITIONAL:{4}]", DateTime.Now, user.Id, user.Name, item.Nume, additionaldata);
-            string file = string.Format(ProjectSettings.RedeemsFile, item.Nume);
+            string redeemer = string.Format("\r\n[{0}]-[USERID:{1}]-[NUME UTILIZATOR:{2}]-[PRODUS:{3}]-[ADITIONAL:{4}]", DateTime.Now, user.Id, user.Name, item.Nume, additionaldata);
+            string file = string.Format(ProjectSettings.RedeemsFile, item.ItemID);
             UnmanagedFileModifier.AppendFile(file, redeemer);
 
             var shop = UnmanagedFileModifier.ReadFile<List<ShopItem>>(ProjectSettings.Shop);
-            shop.FirstOrDefault(x => x.ItemID == item.ItemID).Stoc -= 1;
+            shop.FirstOrDefault(x => x.ItemID == item.ItemID && x.Nume == item.Nume).Stoc -= 1;
             UnmanagedFileModifier.WriteFile(ProjectSettings.Shop, JsonConvert.SerializeObject(shop));
            
             if (string.IsNullOrWhiteSpace(additionaldata))
@@ -290,7 +325,7 @@ namespace LocalDatabaseManager
 
         public async Task<string> AddPointsToOneUser(string userID, int ammount,bool doubleUp = true)
         {
-            return await SQLContextManager.AddPointToViewerAsync(userID, ammount, doubleUp) ? $"Ai primit {ammount} de cox!" : $"Din pacate nu a reusit transferul a {ammount}";
+            return await SQLContextManager.AddPointToViewerAsync(userID, ammount, doubleUp) ? $"Ai primit {ammount} de {ProjectSettings.NumePuncteLoialitate}" : $"Din pacate nu a reusit transferul a {ammount}";
         }
 
         public async Task<int> AddPointsAllAsync(int ammount)
@@ -298,9 +333,9 @@ namespace LocalDatabaseManager
            return await SQLContextManager.AddPointToAllViewersAndCountAsync(ammount);
         }
 
-        public async Task<bool> SetMemberLevel(string id, int ammount)
+        public async Task<bool> SetMemberLevel(string id, MemberLevels level, DateTime expires)
         {
-            return await SQLContextManager.SetUserLevel(id, ammount);
+            return await SQLContextManager.SetUserLevel(id, level, expires);
         }
 
         private async Task<bool> SaveLoyaltyAsync(Viewer viewer)
@@ -323,11 +358,6 @@ namespace LocalDatabaseManager
             return shCount.Count();
         }
 
-        public List<HotWord> GetHotWords()
-        {
-            return MemoryManager.GetHotWords();
-        }
-
         public BettingModel GetLiveBetting()
         {
             return MemoryManager.GetLiveBeting();
@@ -344,37 +374,19 @@ namespace LocalDatabaseManager
             UnmanagedFileModifier.WriteFile(file, customTheme);
         }
 
-        public string AddHotWord(string bettingOption)
-        {
-            bettingOption = Regex.Unescape(bettingOption);            
-            var hotWords = GetHotWords();
-            var hw = hotWords?.Where(x => x.Word.ToLower() == bettingOption.ToLower())?.FirstOrDefault();
-            if (hw != null)
-            {
-                hw.Degree++;
-            }
-            else
-            {
-                hotWords.Add(new HotWord() { Word = bettingOption, Degree = 1 });
-            }
-            hotWords = hotWords.OrderByDescending(x => x.Degree).ToList();
-
-            return SaveHotWords(hotWords);
-        }
-
         public void CreateBettingFromBonusHunt(int maxBet)
         {
             BettingModel BettingModel = new BettingModel(); 
             BettingModel.MaxBet = maxBet;
-            BettingModel.VoteTitle = "Cat plateste Bonus Hunt-ul?";
+            BettingModel.VoteTitle = "Payout BonusHunt?";
             var bh = UnmanagedFileModifier.ReadFile<BonusHuntFullInfo>(ProjectSettings.LiveBonusHuntFile);
             var bhval = bh.HuntValue;
-            var step = bhval / 10;
+            var step = (decimal)bhval / 10;
 
 
-            string opt1 = "Under " + step * 7;
-            string middleOpt = "Intre {0} si {1}";
-            string lastOpt = "Over " + step * 13;
+            string opt1 = "< " + step * 7 / 1000 + "k";
+            string middleOpt = "{0}k-{1}k";
+            string lastOpt = "> " + step * 13 / 1000 + "k";
 
             BettingModel.Options.Add(new BettingOptionModel(0, maxBet)
             {
@@ -385,7 +397,7 @@ namespace LocalDatabaseManager
             {
                 BettingModel.Options.Add(new BettingOptionModel(i, maxBet)
                 {
-                    Nume = string.Format(middleOpt, step * (6 + i), step * (7 + i))
+                    Nume = string.Format(middleOpt, step * (6 + i) / 1000, step * (7 + i) / 1000)
                 });
             }
 
@@ -395,12 +407,6 @@ namespace LocalDatabaseManager
             });
 
             SetLiveBetting(BettingModel);
-        }
-
-        public void ResetHotWors()
-        {
-            string file = ProjectSettings.HotWords;
-            UnmanagedFileModifier.WriteFile(file, JsonConvert.SerializeObject(new List<HotWord>()));
         }
 
         public void TestFile(string v, string toAppend)
@@ -419,7 +425,7 @@ namespace LocalDatabaseManager
             var bonushunt = GetLiveBonusHunt();
             if (bonushunt != null)
             {
-                bonushunt.Bonuses.Add(new BonusHuntGridObject() { BetSize = betSize, GameName = gameName.Game.Name, Payed = 0, IsCurrent = false, ProviderName = gameName.Game.Provider });
+                bonushunt.Bonuses.Add(new BonusHuntGridObject() { BetSize = betSize, PlayerName = gameName.PlayerName, GameName = gameName.Game.Name, Payed = 0, IsCurrent = false, ProviderName = gameName.Game.Provider });
             }
 
             UpdateBonusHunt(bonushunt);
@@ -503,9 +509,9 @@ namespace LocalDatabaseManager
 
 
             if (inDbGame != null)
-                SaveInPlayGame(new InPlayGame() { Game = inDbGame, BonusHuntPreInfo = getInfoFromBH(bonushunt), InHuntNumber = bonushunt.Bonuses.Where(x => x.Payed > 0).Count() + "/" + bonushunt.Bonuses.Count() });
+                SaveInPlayGame(new InPlayGame() { PlayerName = inPlayGame.PlayerName, Game = inDbGame, BonusHuntPreInfo = getInfoFromBH(bonushunt), InHuntNumber = bonushunt.Bonuses.Where(x => x.Payed > 0).Count() + "/" + bonushunt.Bonuses.Count() });
             else
-                SaveInPlayGame(new InPlayGame() { Game = new Game() { Name = inPlayGame.Game.Name }, BonusHuntPreInfo = getInfoFromBH(bonushunt), InHuntNumber = bonushunt.Bonuses.Where(x => x.Payed > 0).Count() + "/" + bonushunt.Bonuses.Count() });
+                SaveInPlayGame(new InPlayGame() { PlayerName = inPlayGame.PlayerName, Game = new Game() { Name = inPlayGame.Game.Name }, BonusHuntPreInfo = getInfoFromBH(bonushunt), InHuntNumber = bonushunt.Bonuses.Where(x => x.Payed > 0).Count() + "/" + bonushunt.Bonuses.Count() });
             return true;
         }
 
@@ -562,7 +568,7 @@ namespace LocalDatabaseManager
             }
             if (jackpotWinner != null)
             {
-                jackpotWinner.Inventory += jackpotAmmount;
+                jackpotWinner.UserCox += jackpotAmmount;
 
             }
             else
@@ -625,9 +631,9 @@ namespace LocalDatabaseManager
                         return string.Format("@{0} max bet este {1}!", userName, betting.MaxBet);
                     }
 
-                    if (userLoyals.Inventory < amm)
+                    if (userLoyals.UserCox < amm)
                     {
-                        return string.Format("@{0} ai {1} de cox nu poti paria {2} de cox!", userName, userLoyals.Inventory, amm);
+                        return string.Format("@{0} ai {1} de monede de aur nu poti paria {2} de {3}!", userName, userLoyals.UserCox, amm, ProjectSettings.NumePuncteLoialitate);
                     }
 
                 }
@@ -667,7 +673,7 @@ namespace LocalDatabaseManager
                     max.Progress = maxno - (betting.Options.Sum(x => x.Progress) - 100);
                 }
 
-                userLoyals.Inventory -= amm;
+                userLoyals.UserCox -= amm;
                 await SaveLoyaltyAsync(userLoyals);
                 SetLiveBetting(betting);
                 AddUserOnCooldown(userID, "bet", 25);
@@ -687,14 +693,22 @@ namespace LocalDatabaseManager
             {
                 CreationTime = DateTime.Now,
                 Id = userID,
-                Inventory = ammount,
+                UserCox = ammount,
                 Name = userName,
-                LastActive = DateTime.Now
+                LastActive = DateTime.Now,
+                ExpiresMember = DateTime.Now,
+                Ipadress ="",
+                IsActive = false,
+                BroadcastMessageCount = 0,
+                Email = "",
+                MemberLevel = MemberLevels.Viewer,
+                SuperbetName = ""
+
             };
 
             if (await SQLContextManager.CreateUser(viewer))
             {
-                return string.Format("@{0} te-ai inscris in sistemul de loyalitate si ai primit 10 cox, nu uita sa te inscrii si pe https://coxino.ro/shop , acum poti sa votezi!", userName);
+                return string.Format("@{0} te-ai inscris in sistemul de loyalitate si ai primit 10 {1}, nu uita sa te inscrii si pe https://coxino.ro/shop , acum poti sa votezi!", userName, ProjectSettings.NumePuncteLoialitate);
             }
             else
             {
@@ -702,13 +716,20 @@ namespace LocalDatabaseManager
                 {
                     CreationTime = DateTime.Now,
                     Id = userID,
-                    Inventory = ammount,
+                    UserCox = ammount,
                     Name = userName.ToAscii(),
-                    LastActive = DateTime.Now
+                    LastActive = DateTime.Now,
+                    ExpiresMember = DateTime.Now,
+                    IsActive = false,
+                    BroadcastMessageCount = 0,
+                    Email = "",
+                    Ipadress = "",
+                    MemberLevel = MemberLevels.Viewer,
+                    SuperbetName = ""
                 };
                 if (await SQLContextManager.CreateUser(viewer2))
                 {
-                    return string.Format("@{0} te-ai inscris in sistemul de loyalitate si ai primit 10 cox dar din cauza caracterelor speciale din numele tau, este posibil ca unele functii sa nu mearga corespunzator. numele tau in sistem va fi : {1}", userName, viewer2.Name);
+                    return string.Format("@{0} te-ai inscris in sistemul de loyalitate si ai primit 10 {1} dar din cauza caracterelor speciale din numele tau, este posibil ca unele functii sa nu mearga corespunzator. numele tau in sistem va fi : {2}", userName, ProjectSettings.NumePuncteLoialitate ,viewer2.Name);
                 }
                 else
                 {
@@ -807,7 +828,7 @@ namespace LocalDatabaseManager
 
             foreach (var game in bonusHunt.Bonuses)
             {
-                game.IsCurrent = false;
+                game.IsCurrent = false;                
             }
             BonusHuntGridObject inplay = new BonusHuntGridObject()
             {
@@ -818,6 +839,7 @@ namespace LocalDatabaseManager
             if (bonusHunt.IsHunting == false)
             {
                 inplay = bonusHunt.Bonuses.Where(x => x.Payed <= 0).FirstOrDefault();
+                
                 cnt = bonusHunt.Bonuses.IndexOf(inplay) + 1;
             }
 
@@ -860,6 +882,8 @@ namespace LocalDatabaseManager
                 InHuntNumber = cnt + "/" + total,
                 BonusHuntPreInfo = bonusHuntPreInfo
             };
+
+            inPlay.PlayerName = inplay.PlayerName;
 
             SaveInPlayGame(inPlay);
         }
