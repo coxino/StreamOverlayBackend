@@ -25,6 +25,7 @@ namespace StreamApi.Controllers
         public BonusHuntFullInfo GetAsync([FromHeader] string token, [FromHeader] string username)
         {
             var bh = UserDatabase.GetByUsername(username).GetLiveBonusHunt();
+           // bh.HuntInfo = UserDatabase.GetByUsername(username).getInfoFromBH(bh);
             return bh;
         }
 

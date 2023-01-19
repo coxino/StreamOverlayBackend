@@ -509,9 +509,9 @@ namespace LocalDatabaseManager
 
 
             if (inDbGame != null)
-                SaveInPlayGame(new InPlayGame() { PlayerName = inPlayGame.PlayerName, Game = inDbGame, BonusHuntPreInfo = getInfoFromBH(bonushunt), InHuntNumber = bonushunt.Bonuses.Where(x => x.Payed > 0).Count() + "/" + bonushunt.Bonuses.Count() });
+                SaveInPlayGame(new InPlayGame() { PlayerName = inPlayGame.PlayerName, Game = inDbGame, InHuntNumber = bonushunt.Bonuses.Where(x => x.Payed > 0).Count() + "/" + bonushunt.Bonuses.Count() });
             else
-                SaveInPlayGame(new InPlayGame() { PlayerName = inPlayGame.PlayerName, Game = new Game() { Name = inPlayGame.Game.Name }, BonusHuntPreInfo = getInfoFromBH(bonushunt), InHuntNumber = bonushunt.Bonuses.Where(x => x.Payed > 0).Count() + "/" + bonushunt.Bonuses.Count() });
+                SaveInPlayGame(new InPlayGame() { PlayerName = inPlayGame.PlayerName, Game = new Game() { Name = inPlayGame.Game.Name }, InHuntNumber = bonushunt.Bonuses.Where(x => x.Payed > 0).Count() + "/" + bonushunt.Bonuses.Count() });
             return true;
         }
 
@@ -853,7 +853,7 @@ namespace LocalDatabaseManager
             SaveCurrentBonusHunt(bonusHunt);
         }
 
-        private BonusHuntPreInfo getInfoFromBH(BonusHuntFullInfo bonusHunt)
+        public BonusHuntPreInfo getInfoFromBH(BonusHuntFullInfo bonusHunt)
         {
             BonusHuntPreInfo bonusHuntPreInfo = new();
             try
@@ -879,8 +879,7 @@ namespace LocalDatabaseManager
             InPlayGame inPlay = new InPlayGame()
             {
                 Game = GetGame(inplay.GameName),
-                InHuntNumber = cnt + "/" + total,
-                BonusHuntPreInfo = bonusHuntPreInfo
+                InHuntNumber = cnt + "/" + total
             };
 
             inPlay.PlayerName = inplay.PlayerName;

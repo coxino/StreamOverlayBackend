@@ -32,7 +32,7 @@ namespace StreamApi.Controllers
                  db.SetTranzactii(tranzactii);
             }
 
-            return true;
+            return Ok(true);
         }
     }
 }
