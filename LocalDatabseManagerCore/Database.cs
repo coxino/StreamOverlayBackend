@@ -1130,24 +1130,6 @@ namespace LocalDatabaseManager
 
         public void UpdateTournament(Tournament tournamenInfo)
         {
-            if (tournamenInfo.IsOptimi)
-            {
-                foreach (var meci in tournamenInfo.MeciuriOptimi)
-                {
-                    meci.Team1.GameImage = AllGamesDatabase.AllGames.Where(x => x.Game.Name == meci.Team1.Nume).FirstOrDefault().Game.Image ?? "assets/img/anonim.jpg";
-                    meci.Team2.GameImage = AllGamesDatabase.AllGames.Where(x => x.Game.Name == meci.Team2.Nume).FirstOrDefault().Game.Image ?? "assets/img/anonim.jpg";
-                }
-            }
-
-            if (tournamenInfo.IsQuarter)
-            {
-                foreach (var meci in tournamenInfo.MeciuriSferturi)
-                {
-                    meci.Team1.GameImage = AllGamesDatabase.AllGames.Where(x => x.Game.Name == meci.Team1.Nume).FirstOrDefault().Game.Image ?? "assets/img/anonim.jpg";
-                    meci.Team2.GameImage = AllGamesDatabase.AllGames.Where(x => x.Game.Name == meci.Team2.Nume).FirstOrDefault().Game.Image ?? "assets/img/anonim.jpg";
-                }
-            }
-
             SaveCurrentTournament(tournamenInfo);
             if (tournamenInfo.IsOptimi)
             {
