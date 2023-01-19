@@ -3,6 +3,8 @@ using DataLayer;
 using JWTManager;
 using LocalDatabaseManager;
 using Microsoft.AspNetCore.Mvc;
+using StaticDatabase;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace StreamApi.Controllers
@@ -50,7 +52,7 @@ namespace StreamApi.Controllers
         {
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            {
+            {                
                 db.CreateTournament(tournamenInfo);
             }
 

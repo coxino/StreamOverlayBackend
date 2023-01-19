@@ -97,6 +97,7 @@ namespace DataLayer
         public bool HasWon { get; set; }
         public double PrevX { get; set; }
         public bool IsCurrent { get; set; }
+        public string GameImage { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -108,6 +109,7 @@ namespace DataLayer
             return other != null &&
                    Nume == other.Nume &&
                    NumeJucator == other.NumeJucator &&
+                   GameImage == other.GameImage &&
                    BuyCost == other.BuyCost &&
                    EqualityComparer<List<PayoutTemplate>>.Default.Equals(Payout, other.Payout) &&
                    Scor == other.Scor &&
@@ -121,6 +123,7 @@ namespace DataLayer
             int hashCode = -1398063904;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Nume);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(NumeJucator);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(GameImage);
             hashCode = hashCode * -1521134295 + BuyCost.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<List<PayoutTemplate>>.Default.GetHashCode(Payout);
             hashCode = hashCode * -1521134295 + Scor.GetHashCode();
