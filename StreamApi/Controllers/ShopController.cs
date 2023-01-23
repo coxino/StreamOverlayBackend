@@ -65,7 +65,7 @@ namespace StreamApi.Controllers
 
             var userid = JwtManager.GetClaim(userModel.localUserToken, ClaimNames.Username);
 
-            var utilizator = await db.GetViewerAsync(userid);           
+            var utilizator = await db.GetViewerAsync(userid);
 
             if (utilizator.IsActive == false && utilizator.MemberLevel < MemberLevels.Coxumator)
             {
@@ -121,60 +121,50 @@ namespace StreamApi.Controllers
 
             db.AddUserOnCooldown(utilizator.Id, item.ItemID, item.Cooldown);
 
-            if (item.ItemID == "mystery2")
+            if (item.ItemType == ItemType.NormalItem)
             {
-                int number = new Random().Next(0, 11);
-                if (number == 4)
-                {
-                    db.RedeemItem(utilizator, item, "50 SHINING CROWN");
-                    System.IO.File.AppendAllText(@"C:\StreamOverlay\assets\img\test.txt", "\r\n " + utilizator.Name);
-                    await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} tocmai a castigat 50 RON rulaj 1x din [{item.Nume}] pe !shop incearca si tu.");
-                    return Ok("Ai primit 50RON SHINING CROWN! Nu uita sa-ti completezi numele de la superbet!");
-                }
-                else
-                {
-                    return "NECASTIGATOR";
-                }
+                db.RedeemItem(utilizator, item, item.Nume);
+                await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} tocmai a cumparat [{item.Nume}] de pe !shop.");
+                return Ok($"Felicitari ai cumparat {item.Nume}!");
+
             }
 
-            if (item.ItemID == "mystery1")
+            if (item.ItemType == ItemType.MysteryBox)
             {
-                int number = new Random().Next(0, 20);
-                if (number == 14)
+                int maxLuck = item.Drops.Sum(d => d.Luck);
+                int number = new Random().Next(0, maxLuck);
+                DropItem reward = new DropItem();
+
+                int a = -1;
+                foreach (var x in item.Drops)
                 {
-                    db.RedeemItem(utilizator, item, "50 SHINING");
-                    await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} tocmai a castigat 50 RON rulaj 1x din [{item.Nume}] pe !shop incearca si tu.");
-                    return Ok("Ai primit 50RON SHINING CROWN! Nu uita sa-ti completezi numele de la superbet!");
+                    if (number > a && number <= x.Luck)
+                    {
+                        reward = x;
+                        break;
+                    }
+                    a = x.Luck;
                 }
-                else
+
+                if (reward.DropType == DropType.Normal)
                 {
-                    return "NECASTIGATOR";
+                    db.RedeemItem(utilizator, item, reward.Name);
+                    await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} tocmai a castigat {reward.Name} din {item.Nume} pe !shop incearca si tu.");
+                    return Ok($"Felicitari ai castigat {reward.Name} din {item.Nume}");
+                }
+                else if (reward.DropType == DropType.LoyaltyPoints)
+                {
+                    db.RedeemItem(utilizator, item, reward.Name);
+                    await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} tocmai a castigat {reward.DropList[0]}{Settings.ProjectSettings.NumePuncteLoialitate} din {item.Nume} pe !shop incearca si tu.");
+                    return await db.WinPointsAsync(utilizator, int.Parse(reward.DropList[0]));
+                }
+                else if (reward.DropType == DropType.Code)
+                {
+                    db.RedeemItem(utilizator, item, reward.Name);
+                    await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} tocmai a castigat {reward.Name} din {item.Nume} pe !shop incearca si tu.");
+                    return Ok($"Felicitari ai castigat {reward.Name} din {item.Nume} - primesti pe email premiul.");
                 }
             }
-
-            if (item.ItemID == "gift100")
-            {         
-                int number = new Random().Next(0, 300);               
-
-                if (number < 150)
-                {
-                    return await db.WinPointsAsync(utilizator, 50);
-                }
-
-                if (number < 250)
-                {
-                    return await db.WinPointsAsync(utilizator, 100);
-                }
-
-                if (number < 300)
-                {
-                    return await db.WinPointsAsync(utilizator, 250);
-                }                
-            }
-
-
-            await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} tocmai a cumparat [{item.Nume}] de pe !shop, strange {ProjectSettings.NumePuncteLoialitate} si cumpara si tu.");
-            return db.RedeemItem(utilizator, item, userModel.item.OptionalData);
         }
 
         [HttpGet("validare")]

@@ -31,19 +31,12 @@ namespace StreamApi.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<bool>> SetAsync([FromBody] InPlayGame inPlayGame, [FromHeader] int betSize, [FromHeader] string token)
+        public async Task<ActionResult<bool>> SetAsync([FromBody] InPlayGame inPlayGame, [FromHeader] string token)
         {
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
                 db.SetInplayGame(inPlayGame);
-
-                if (AllGamesDatabase.AllGames.Any(x => x.Game.Name == inPlayGame.Game.Name && x.PlayerName == inPlayGame.PlayerName))
-                {
-                    db.AddSingleGameToBH(inPlayGame, betSize);
-                    AllGamesDatabase.AllGames.FirstOrDefault(x => x.Game.Name == inPlayGame.Game.Name && x.PlayerName == inPlayGame.PlayerName).Bet = betSize;
-                }
-
             }
 
             return true;

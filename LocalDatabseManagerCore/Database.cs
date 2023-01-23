@@ -819,8 +819,7 @@ namespace LocalDatabaseManager
         }
 
         public void UpdateBonusHunt(BonusHuntFullInfo bonusHunt)
-        {
-            var cnt = 0;
+        {            
             if (!bonusHunt.Bonuses.Any(x => x.BetSize <= 0))
             {
                 bonusHunt.Bonuses = bonusHunt.Bonuses.OrderBy(x => x.BetSize).ToList();
@@ -829,25 +828,6 @@ namespace LocalDatabaseManager
             foreach (var game in bonusHunt.Bonuses)
             {
                 game.IsCurrent = false;                
-            }
-            BonusHuntGridObject inplay = new BonusHuntGridObject()
-            {
-                GameName = "Hunting",
-                ProviderName = "",
-            };
-
-            if (bonusHunt.IsHunting == false)
-            {
-                inplay = bonusHunt.Bonuses.Where(x => x.Payed <= 0).FirstOrDefault();
-                
-                cnt = bonusHunt.Bonuses.IndexOf(inplay) + 1;
-            }
-
-            BonusHuntPreInfo bonusHuntPreInfo = getInfoFromBH(bonusHunt);
-            if (inplay != null)
-            {
-                inplay.IsCurrent = true;
-                SaveInPlayGame(inplay, bonusHuntPreInfo, cnt, bonusHunt.Bonuses.Count);
             }
 
             SaveCurrentBonusHunt(bonusHunt);
