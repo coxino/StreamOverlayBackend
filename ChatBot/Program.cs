@@ -19,8 +19,8 @@ namespace ChatBot
     {
         static async Task Main(string[] args)
         {
-            YoutubeChatWriterOther youtubeChatWriter = new YoutubeChatWriterOther();
-             await youtubeChatWriter.WriteMessageAsync("hello");
+            //YoutubeChatWriterOther youtubeChatWriter = new YoutubeChatWriterOther();
+            // await youtubeChatWriter.WriteMessageAsync("hello");
         }
     }
 }

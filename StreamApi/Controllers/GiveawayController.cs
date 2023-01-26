@@ -127,28 +127,28 @@ namespace StreamApi.Controllers
         }
 
 
-        [HttpPost("buyTiket")]
-        public async Task<ActionResult<string>> BuyTiketAsync([FromBody] GiveawayRequestModel buyTiketModel)
-        {
-            var db = await UserDatabase.GetGivewayDBAsync(_context);
-            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            {
-                var utilizator = await db.GetViewerAsync(buyTiketModel.localUser.userYoutubeID);
+        //[HttpPost("buyTiket")]
+        //public async Task<ActionResult<string>> BuyTiketAsync([FromBody] GiveawayRequestModel buyTiketModel)
+        //{
+        //    var db = await UserDatabase.GetGivewayDBAsync(_context);
+        //    if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
+        //    {
+        //        var utilizator = await db.GetViewerAsync(buyTiketModel.localUser.userYoutubeID);
 
-                if (utilizator.IsActive == false)
-                {
-                    return BadRequest("Trebuie sa-ti validezi contul sa poti cumpara de pe site!");
-                }
+        //        if (utilizator.IsActive == false)
+        //        {
+        //            return BadRequest("Trebuie sa-ti validezi contul sa poti cumpara de pe site!");
+        //        }
 
-                if (db.IsUserOnCooldown(buyTiketModel.localUser.userYoutubeID, "buyTiket"))
-                {
-                    return "Poti cumpara un ticket la 5 secunde!";
-                }
-                db.AddUserOnCooldown(buyTiketModel.localUser.userYoutubeID, "buyTiket", 0.09);
-                return await db.BuyGiveawayTiket(buyTiketModel);
-            }
+        //        if (db.IsUserOnCooldown(buyTiketModel.localUser.userYoutubeID, "buyTiket"))
+        //        {
+        //            return "Poti cumpara un ticket la 5 secunde!";
+        //        }
+        //        db.AddUserOnCooldown(buyTiketModel.localUser.userYoutubeID, "buyTiket", 0.09);
+        //        return await db.BuyGiveawayTiket(buyTiketModel);
+        //    }
 
-            return "Nu am putut valida tiketul incearca din nou!";
-        }
+        //    return "Nu am putut valida tiketul incearca din nou!";
+        //}
     }
 }

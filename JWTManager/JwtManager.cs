@@ -29,9 +29,10 @@ namespace JWTManager
 
 	public static class ClaimNames
 	{
-		public static string Username = "Username";
+		public static string YoutubeToken = "YoutubeToken";
+        public static string Username = "Username";
 		public static string Password = "Password";
-		public static string UserId = "UserId";
+		public static string StreamerId = "UserId";
 
 	}
 	public class JwtManager
@@ -57,7 +58,7 @@ namespace JWTManager
 				{
 					new Claim(ClaimNames.Username, user.Username),
 					new Claim(ClaimNames.Password, user.Password),
-					new Claim(ClaimNames.UserId, user.Id.ToString())
+					new Claim(ClaimNames.StreamerId, user.Id.ToString())
 				}),
 				Expires = DateTime.UtcNow.AddDays(7),
 				Issuer = myIssuer,
@@ -107,11 +108,18 @@ namespace JWTManager
 				return "error";
             }
 
-			var tokenHandler = new JwtSecurityTokenHandler();
-			var securityToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+			try
+			{
+				var tokenHandler = new JwtSecurityTokenHandler();
+				var securityToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
 
-			var stringClaimValue = securityToken.Claims.First(claim => claim.Type == claimType).Value;
-			return stringClaimValue;
+				var stringClaimValue = securityToken.Claims.First(claim => claim.Type == claimType).Value;
+				return stringClaimValue;
+			}
+			catch
+			{
+				return "";
+			}
 		}
 
 
@@ -124,7 +132,7 @@ namespace JWTManager
 			{
 				var usr = GetClaim(token, ClaimNames.Username);
 				var pwd = GetClaim(token, ClaimNames.Username);
-				var id = GetClaim(token, ClaimNames.UserId);
+				var id = GetClaim(token, ClaimNames.StreamerId);
 
 				var user = await _context.Accounts.Where(x => x.Username == usr && x.Password == pwd).FirstOrDefaultAsync();
 				if (user == null)
@@ -138,7 +146,7 @@ namespace JWTManager
 				}
 			}
 			var userName = GetClaim(token, ClaimNames.Username).Replace(" ", "");
-			var userId = GetClaim(token, ClaimNames.UserId).Replace(" ", "");
+			var userId = GetClaim(token, ClaimNames.StreamerId).Replace(" ", "");
 
 			var userAccount = await _context.Accounts.Where(x => x.Username == userName).FirstOrDefaultAsync();
 
@@ -167,7 +175,7 @@ namespace JWTManager
 			return usr;
 		}
 
-		public static string GenerateViewerToken(string userId)
+		public static string GenerateViewerToken(string userId,string youtubeToken)
 		{
 			var mySecurityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(mySecret));
 
@@ -180,8 +188,9 @@ namespace JWTManager
 				Subject = new ClaimsIdentity(new Claim[]
 				{
 					new Claim(ClaimNames.Username, userId),
-				}),
-				Expires = DateTime.UtcNow.AddDays(1),
+					new Claim(ClaimNames.YoutubeToken, youtubeToken),
+                }),
+				Expires = DateTime.UtcNow.AddDays(30),
 				Issuer = myIssuer,
 				Audience = myAudience,
 				SigningCredentials = new SigningCredentials(mySecurityKey, SecurityAlgorithms.HmacSha256Signature)
@@ -193,9 +202,9 @@ namespace JWTManager
 			return tt;
 		}
 
-        public static string GenerateViewerLoginToken(string userYoutubeID)
+        public static string GenerateViewerLoginToken(string userYoutubeID, string youtubeToken)
         {
-			return GenerateViewerToken(userYoutubeID);
+			return GenerateViewerToken(userYoutubeID, youtubeToken);
         }
     }
 }

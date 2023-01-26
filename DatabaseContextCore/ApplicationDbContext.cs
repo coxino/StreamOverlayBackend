@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DatabaseContextCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace DatabaseContext
 {
@@ -9,9 +10,11 @@ namespace DatabaseContext
         public DbSet<GivewayModel> Giveways { get; set; }
         public DbSet<GivewayTiket> GivewayTikets { get; set; }
         public DbSet<Winner> Winners { get; set; }
+        public DbSet<ViewerWallet> ViewerWallets { get; set; }
+
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
-
+           
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -22,6 +25,7 @@ namespace DatabaseContext
             modelBuilder.ApplyConfiguration(new GivewayModelConfiguration());
             modelBuilder.ApplyConfiguration(new GivewayTiketConfiguration());
             modelBuilder.ApplyConfiguration(new WinnerConfiguration());
+            modelBuilder.ApplyConfiguration(new ViewerWalletConfiguration());
         }
     }
 }

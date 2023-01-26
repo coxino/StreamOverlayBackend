@@ -5,6 +5,7 @@
     <Configurations>Debug;Release;XDebug</Configurations>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>coxinotv.snk</AssemblyOriginatorKeyFile>
+    <ApplicationIcon>favicon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -16,6 +17,10 @@
     <OutputPath>C:\OverlayEditor\</OutputPath>
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="favicon.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Dynamitey" Version="2.0.10.189" />

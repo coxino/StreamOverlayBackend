@@ -21,11 +21,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JWTManager", "JWTManager\JW
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Youtube Contractor", "Youtube Contractor\Youtube Contractor.csproj", "{06AFE382-82EA-4F7C-AFD8-B5675AE011BB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatBot", "ChatBot\ChatBot.csproj", "{24B1EAD7-0CBA-4869-9B52-6A27CBB43030}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatBotYoutube", "ChatBot\ChatBotYoutube.csproj", "{24B1EAD7-0CBA-4869-9B52-6A27CBB43030}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StaticDatabase", "StaticDatabase\StaticDatabase.csproj", "{452EDCF4-5236-4B69-9251-24C8189FAB67}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Email Sender", "Email Sender\Email Sender.csproj", "{CE253CFE-258D-4480-B703-401B8D563409}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Email Sender", "Email Sender\Email Sender.csproj", "{CE253CFE-258D-4480-B703-401B8D563409}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

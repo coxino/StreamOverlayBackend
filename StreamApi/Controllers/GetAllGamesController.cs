@@ -62,41 +62,41 @@ namespace StreamApi.Controllers
 
         }
 
-        [HttpPost("buyGame")]
-        public async Task<ActionResult<string>> BuyGameAsync([FromBody] GameRequestModel userModel)
-        {
-            return Ok(new { message = "NU SE MAI POT CUMPARA JOLCURI!" });
+        //[HttpPost("buyGame")]
+        //public async Task<ActionResult<string>> BuyGameAsync([FromBody] GameRequestModel userModel)
+        //{
+        //    return Ok(new { message = "NU SE MAI POT CUMPARA JOLCURI!" });
 
 
-            var db = await UserDatabase.GetGivewayDBAsync(_context);
+        //    var db = await UserDatabase.GetGivewayDBAsync(_context);
 
-            var viewer = await db.GetViewerAsync(userModel.UserId);
+        //    var viewer = await db.GetViewerAsync(userModel.UserId);
 
-            if (viewer == null)
-            {
-                return Ok(new { message = "Te rog sa te autentifici!" });
-            }
+        //    if (viewer == null)
+        //    {
+        //        return Ok(new { message = "Te rog sa te autentifici!" });
+        //    }
 
-            if (db.IsUserOnCooldown(viewer.Id, "buyGame"))
-            {
-                return Ok(new { message = "Asteapta 10 secunde" });
-            }
+        //    if (db.IsUserOnCooldown(viewer.Id, "buyGame"))
+        //    {
+        //        return Ok(new { message = "Asteapta 10 secunde" });
+        //    }
 
-            if (viewer.UserCox < 4000)
-            {
-                return Ok(new { message = "Nu ai destul gold sa cumperi acest joc!" });
-            }
+        //    if (viewer.UserCox < 4000)
+        //    {
+        //        return Ok(new { message = "Nu ai destul gold sa cumperi acest joc!" });
+        //    }
 
-            await db.AddPointsToOneUser(viewer.Id, -4000, false);
+        //    await db.AddPointsToOneUser(viewer.Id, -4000, false);
 
-            var message = StaticDatabase.AllGamesDatabase.BuyGame(viewer.Name, userModel.GameName, out bool bought);
+        //    var message = StaticDatabase.AllGamesDatabase.BuyGame(viewer.Name, userModel.GameName, out bool bought);
 
-            if(bought == true)
-            {
-                db.AddUserOnCooldown(viewer.Id, "buyGame", 0.3f);
-            }
+        //    if(bought == true)
+        //    {
+        //        db.AddUserOnCooldown(viewer.Id, "buyGame", 0.3f);
+        //    }
 
-            return Ok(new { message = message });
-        }
+        //    return Ok(new { message = message });
+        //}
     }
 }
