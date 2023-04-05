@@ -40,7 +40,7 @@ namespace StreamApi.Controllers
         }
 
         [HttpPost("add")]
-        public async Task<ActionResult<bool>> AddAsync([FromHeader] string token, [FromHeader] int betSize, [FromBody] InPlayGame gameName)
+        public async Task<ActionResult<bool>> AddAsync([FromHeader] string token, [FromHeader] double betSize, [FromBody] InPlayGame gameName)
         {
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
@@ -51,11 +51,11 @@ namespace StreamApi.Controllers
             return Ok(true);
         }
 
-        [HttpGet("qualifiers")]
-        public ActionResult<object> GetCurrent()
-        {
-            return GiveawayAniversar.CurentUser;
-        }
+        //[HttpGet("qualifiers")]
+        //public ActionResult<object> GetCurrent()
+        //{
+        //    return FinalBalance.CurentUser;
+        //}
 
         [HttpPost("delete")]
         public async Task<ActionResult<bool>> Delete([FromHeader] string token, [FromHeader] int bonus)

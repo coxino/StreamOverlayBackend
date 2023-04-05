@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Configurations>Debug;Release;XDebug</Configurations>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>coxinotv.snk</AssemblyOriginatorKeyFile>
@@ -39,6 +39,16 @@
     <ProjectReference Include="..\LocalDatabseManagerCore\LocalDatabseManagerCore.csproj" />
     <ProjectReference Include="..\SQLContextManager\SQLContextManager.csproj" />
     <ProjectReference Include="..\Youtube Contractor\Youtube Contractor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\certificate.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 
