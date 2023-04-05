@@ -1,13 +1,11 @@
 ﻿using DatabaseContext;
 using DatabaseContextCore;
-using DataLayer;
 using JWTManager;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -40,14 +38,7 @@ namespace SQLContextManager
         public async Task<List<Viewer>> GetLoyalityAsync()
         {
             //.Where(x=>x.User.Id == UserId)
-            var q = await _context.Viewers.Include(x=>x.Wallets).ToListAsync();
-            return q;
-        }
-
-        public async Task<List<Viewer>> GetActiveLoyalityAsync()
-        {
-            var when = DateTime.Now.AddMinutes(-15);
-            var q = await _context.Viewers.Include(x => x.Wallets).Where(x=>x.LastActive > when).ToListAsync();
+            var q = await _context.Viewers.ToListAsync();
             return q;
         }
 
@@ -56,7 +47,7 @@ namespace SQLContextManager
         /// </summary>
         /// <param name="ammount"></param>
         /// <returns>success</returns>
-
+       
 
         public string GetAccountID()
         {
@@ -66,23 +57,27 @@ namespace SQLContextManager
         public async Task<int> AddPointToAllViewersAndCountAsync(int ammount)
         {
             int count = 0;
-            var usersLoyalty = await GetActiveLoyalityAsync();
-            
+            var usersLoyalty = await GetLoyalityAsync();
             var userLoyaltyAux = usersLoyalty;
             foreach (var user in userLoyaltyAux)
             {
-                if(user.MemberLevel > MemberLevels.Level1)
+                var existingChild = user;
+                if (existingChild.LastActive.AddMinutes(20) > DateTime.Now)
                 {
-                    var existingChild = user;
                     count++;
-                    existingChild.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount + (int)(ammount * 0.5);
-                    _context.Entry(user).CurrentValues.SetValues(existingChild);
-                }
-                else
-                {
-                    var existingChild = user;
-                    count++;
-                    existingChild.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount;
+                    switch (existingChild.MemberLevel)
+                    {
+                        case MemberLevels.Ajutor:
+                        case MemberLevels.Cop:
+                        case MemberLevels.Coxumator:
+                        case MemberLevels.Gangster:
+                        case MemberLevels.ElChapo:
+                            existingChild.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount * 2;
+                            break;
+                        default:
+                            existingChild.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount;
+                            break;
+                    }                   
                     _context.Entry(user).CurrentValues.SetValues(existingChild);
                 }
             }
@@ -100,12 +95,7 @@ namespace SQLContextManager
 
         public async Task<List<GivewayModel>> GetGiveawayList()
         {
-            return await _context.Giveways.Where(x=>x.OwnerId == StreamerId.ToString()).ToListAsync();
-        }
-
-        public async Task<List<GivewayTiket>> GetGivewayTikets()
-        {
-            return await _context.GivewayTikets.ToListAsync();
+            return await _context.Giveways.ToListAsync();
         }
 
         public async Task<ViewerWallet> CreateUserWallet(string viewerId)
@@ -113,6 +103,7 @@ namespace SQLContextManager
             var viewerWallet = new ViewerWallet()
             {
                 Coins = 0,
+                IsMember = false,
                 StreamerId = GetAccountID(),
                 ViewerId = viewerId            
             };
@@ -168,6 +159,22 @@ namespace SQLContextManager
             var all_tikets = await _context.GivewayTikets.ToListAsync();
             var thisGWTikets = all_tikets.Where(x => x.GiveawayID == id).ToList();
 
+            List<GivewayTiket> membersTikets = new List<GivewayTiket>();
+            foreach(var viewerTiket in thisGWTikets)
+            {
+                var viewer = await GetViewerModel(viewerTiket.ViewerID);
+                if (viewer.MemberLevel > MemberLevels.Moderator)
+                {
+                    membersTikets.Add(new GivewayTiket() { ViewerID = viewer.Id, GiveawayID = id });
+                }
+            }
+
+            thisGWTikets.AddRange(membersTikets);
+
+            var all_tikets_distinct = all_tikets.GroupBy(x => x.ViewerID)
+                                  .Select(g => g.First())
+                                  .ToList();
+
             List<string> giveawayWinners = new List<string>();
 
             await Task.Run(async () =>
@@ -176,31 +183,22 @@ namespace SQLContextManager
                 {
                     var winnerNumber = 0;
                     var winner = "";
-                    
+
                     winnerNumber = new Random().Next(0, thisGWTikets.Count());
                     winner = thisGWTikets[winnerNumber].ViewerID;
-                    thisGWTikets.RemoveAll(x => x.ViewerID == winner);
+
                     if (giveawayWinners.Any(x => x == winner) == false)
                     {
                         giveawayWinners.Add(winner);
+                        await _context.Winners.AddAsync(new Winner() { GiveawayID = id, ViewerID = winner });
                     }
 
-                    if (giveawayWinners.Count() == giveaway.WinnersCount || thisGWTikets.Count <= 0)
+                    if (all_tikets_distinct.Count() <= giveaway.WinnersCount)
                     {
                         break;
                     }
-
-                    await Task.Delay(5);
                 }
             });
-
-            Random rng = new();
-            var giveawayWinnersShufle = giveawayWinners.OrderBy(a => rng.Next()).ToList();
-            foreach (var winner in giveawayWinnersShufle)
-            {
-                await _context.Winners.AddAsync(new Winner() { GiveawayID = id, ViewerID = winner });
-            }
-
             await _context.SaveChangesAsync();
         }
 
@@ -289,17 +287,30 @@ namespace SQLContextManager
             return await _context.Viewers.Include(x => x.Wallets).FirstOrDefaultAsync(x => x.Id == userID);
         }
 
-        public async Task<bool> AddPointToViewerAsync(Viewer viewer, int ammount, bool doubleUp = false)
+        public async Task<bool> AddPointToViewerAsync(Viewer viewer, int ammount, bool doubleUp = true)
         {
             if (doubleUp == true)
             {
-                if (viewer.MemberLevel > MemberLevels.Level1)
+                switch (viewer.MemberLevel)
                 {
-                    ammount += (int)(ammount * 0.5);
+                    case MemberLevels.Ajutor:
+                    case MemberLevels.Cop:
+                    case MemberLevels.Coxumator:
+                    case MemberLevels.Gangster:
+                    case MemberLevels.ElChapo:
+                        ammount *= 2;
+                        viewer.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount;
+                        break;
+                    default:
+                        viewer.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount;
+                        break;
                 }
             }
+            else
+            {
+                viewer.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount;
+            }
 
-            viewer.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount;
             return await SaveUser(viewer);
         }
 
@@ -334,6 +345,12 @@ namespace SQLContextManager
             return 0;
         }
 
+        public async Task<bool> AddPointToViewerAsync(string userID, int ammount, bool doubleUp = true)
+        {
+            var viewer = await GetViewerModel(userID);
+            return await AddPointToViewerAsync(viewer, ammount,doubleUp);
+        }
+
         public async Task<bool> SetUserLevel(string id, MemberLevels level, DateTime expires)
         {
             var viewer = await GetViewerModel(id);
@@ -352,45 +369,16 @@ namespace SQLContextManager
 
            return await CreateUserWallet(viewerId);
         }
+
         public async Task<bool> SetYoutubeToken(string youtubetoken)
         {
-            (await _context.Accounts.FirstOrDefaultAsync(x => x.Id == StreamerId)).YoutubeToken = youtubetoken;
-            return await _context.SaveChangesAsync() > 0;
-        }
-
-        public async Task<bool> SetTwitchToken(string youtubetoken,string twitchId)
-        {
-            (await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == StreamerId)).TwitchToken = youtubetoken;
-            (await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == StreamerId)).TwitchId = twitchId;
+            (await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == StreamerId)).YoutubeToken = youtubetoken;
             return await _context.SaveChangesAsync() > 0;
         }
 
         public async Task<string> GetYoutubeToken()
         {
            return (await _context.Accounts.FirstOrDefaultAsync(x => x.Id == StreamerId)).YoutubeToken;
-        }
-
-        public async Task<string> GetTwitchToken()
-        {
-            return (await _context.Accounts.FirstOrDefaultAsync(x => x.Id == StreamerId)).TwitchToken;
-        }
-
-        public async Task<bool> RemovePointsToOneUser(Viewer viewer, int ammount, bool doubleUp)
-        {
-            if (viewer.Wallets?.FirstOrDefault(x => x.StreamerId == StreamerId.ToString())?.Coins < ammount)
-            {
-                return false;
-            }
-            else
-            {
-                viewer.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins -= ammount;
-                return await SaveUser(viewer);
-            }
-        }
-
-        public Guid GetAccountGuID()
-        {
-            return StreamerId;
         }
     }
 }

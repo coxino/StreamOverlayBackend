@@ -15,8 +15,6 @@ namespace DatabaseContext
             builder.Property(x => x.Created).IsRequired(true);
             builder.Property(x => x.Subscription).IsRequired(true);
             builder.Property(x => x.YoutubeToken).IsRequired(false);
-            builder.Property(x => x.TwitchToken).IsRequired(false);
-            builder.Property(x => x.TwitchId).IsRequired(false);
             builder.Property(x => x.Role).HasMaxLength(1).IsRequired(true).HasDefaultValue(0);
         }
     }

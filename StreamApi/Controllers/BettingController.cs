@@ -84,6 +84,26 @@ namespace StreamApi.Controllers
             return Ok(true);
         }
 
+        [HttpPost("updateOption")]
+        public async Task<ActionResult<string>> UpdateOptionAsync([FromHeader] string token, [FromHeader] string userID, [FromHeader] string bettingOption, [FromHeader] string user, [FromHeader] string amount)
+        {
+            if (Settings.ProjectSettings.BettingOff == false)
+            {
+                return $"@{user} Momentan nu este nicun bet activ!";
+            }
+
+            var db = await UserDatabase.GetDatabaseAsync(token, _context);
+            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
+            {
+                return await db.IncrementBettingOptionAsync(userID, bettingOption, user, amount);
+            }
+            else
+            {
+                return $"@{user} mai incearca odata.. cred ca a crapat!";
+            }
+        }
+
+
         [HttpPost("moca")]
         public async Task<ActionResult<string>> MocaOptionAsync([FromHeader] string token, [FromHeader] string userID, [FromHeader] string userName)
         {

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
-using Microsoft.DotNet.PlatformAbstractions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -18,32 +17,14 @@ namespace StreamApi
     public class Program
     {
 
-        public static void Main(string[] args) =>
-               new WebHostBuilder()
-            //#if DEBUG
-            //            .UseKestrel(config =>
-            //            {
-            //                config.ConfigureHttpsDefaults(config =>
-            //                {
-            //                    config.ServerCertificate = new X509Certificate2(@"D:\certificate.pfx", "cosminR32", X509KeyStorageFlags.DefaultKeySet);
-            //                    config.SslProtocols = SslProtocols.Tls12;
-            //                });
-            //            })
-            //            .UseContentRoot(Directory.GetCurrentDirectory())
-            //            .UseConfiguration(new ConfigurationBuilder()
-            //                        .SetBasePath(Directory.GetCurrentDirectory())
-            //                        .AddJsonFile("appsettings.json")
-            //                        .Build())
-            //            .UseIISIntegration()
-            //            .UseStartup<Startup>()
-            //            .UseUrls("https://0.0.0.0:5000/")
-            //#else
-            .UseKestrel(config =>
+        public static void Main(string[] args) =>           
+        new WebHostBuilder()
+            .UseKestrel(config=>
             {
                 config.ConfigureHttpsDefaults(config =>
                 {
-                    //    config.ServerCertificate = new X509Certificate2(ApplicationEnvironment.ApplicationBasePath + @"Resources/certificate.pfx", "cosminR32", X509KeyStorageFlags.DefaultKeySet);
-                    //    config.SslProtocols = SslProtocols.Tls12;
+                    config.ServerCertificate = new X509Certificate2(@"D:\certificate.pfx", "cosminR32", X509KeyStorageFlags.DefaultKeySet);
+                    config.SslProtocols = SslProtocols.Tls12;
                 });
             })
             .UseContentRoot(Directory.GetCurrentDirectory())
@@ -52,10 +33,9 @@ namespace StreamApi
                         .AddJsonFile("appsettings.json")
                         .Build())
             .UseIISIntegration()
-            .UseStartup<Startup>()
-            //.UseUrls("https://0.0.0.0:80")
-            //#endif
-            .Build()
+            .UseStartup<Startup>()               
+            .UseUrls("https://0.0.0.0:5000/")
+            .Build()            
             .Run();
     }
 }

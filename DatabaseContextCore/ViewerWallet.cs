@@ -15,7 +15,8 @@ namespace DatabaseContextCore
 
         public int Id { get; set; }
         public string StreamerId { get; set; }
-        public string ViewerId { get; set; }      
+        public string ViewerId { get; set; }
+        public bool IsMember { get; set; }
         public int Coins { get; set; }
 
         public Viewer Viewer { get; set; }
@@ -31,13 +32,14 @@ namespace DatabaseContextCore
                    Id == other.Id &&
                    StreamerId == other.StreamerId &&
                    ViewerId == other.ViewerId &&
+                   IsMember == other.IsMember &&
                    Coins == other.Coins &&
                    EqualityComparer<Viewer>.Default.Equals(Viewer, other.Viewer);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Id, StreamerId, ViewerId, Coins, Viewer);
+            return HashCode.Combine(Id, StreamerId, ViewerId, IsMember, Coins, Viewer);
         }
     }
 }

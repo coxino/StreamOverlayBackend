@@ -10,7 +10,6 @@ namespace DatabaseContext
         {
         }
 
-
         [Key]
         public Guid Id { get; set; }
         public string Username { get; set; }
@@ -21,8 +20,6 @@ namespace DatabaseContext
         public int Role { get; set; }
         public string Email { get; set; }
         public string YoutubeToken { get; set; }
-        public string TwitchToken { get; set; }
-        public string TwitchId { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -40,9 +37,7 @@ namespace DatabaseContext
                    Subscription == other.Subscription &&
                    Role == other.Role &&
                    Email == other.Email &&
-                   YoutubeToken == other.YoutubeToken &&
-                   TwitchToken == other.TwitchToken &&
-                   TwitchId == other.TwitchId;
+                   YoutubeToken == other.YoutubeToken;
         }
 
         public override int GetHashCode()
@@ -57,8 +52,6 @@ namespace DatabaseContext
             hash.Add(Role);
             hash.Add(Email);
             hash.Add(YoutubeToken);
-            hash.Add(TwitchToken);
-            hash.Add(TwitchId);
             return hash.ToHashCode();
         }
     }

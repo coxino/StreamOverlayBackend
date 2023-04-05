@@ -110,7 +110,7 @@ namespace StreamApi.Controllers
 
             if (user != null)
             {
-                var code = JwtManager.GenerateViewerToken(userID,"","disconected");
+                var code = JwtManager.GenerateViewerToken(userID,"");
                 Email(user.Email, generateEmail(code, user.Name,redirect), "Validare cont coxino.ro");
                 if (string.IsNullOrWhiteSpace(user.EmailSecundar) == false)
                 {

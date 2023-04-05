@@ -9,7 +9,6 @@ namespace DataLayer
     public class StreamerSettings
     {
         public string ChannelId { get; set; }
-        public string TwitchChannelId { get; set; }
         public string ChannelName { get; set; }
         public string ProfilePicture { get; set; }  
         public string BackgroundImage { get; set; }

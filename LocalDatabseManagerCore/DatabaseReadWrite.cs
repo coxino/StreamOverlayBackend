@@ -1,6 +1,5 @@
 ﻿using DataLayer;
 using Newtonsoft.Json;
-using Settings;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -95,7 +94,7 @@ namespace LocalDatabaseManager
             }
         }
 
-        internal Game GetGame(string gameName, bool withRounds = true)
+        internal Game GetGame(string gameName)
         {
             var file = Settings.ProjectSettings.DatabaseFolder + Settings.ProjectSettings.GamesFile;
             lock (SyncRoot)
@@ -114,8 +113,8 @@ namespace LocalDatabaseManager
             var Games = JsonConvert.DeserializeObject<List<Game>>(File.ReadAllText(file));
             game = Games?.FirstOrDefault(x => x.Name == gameName) ?? null;
 
-            if (game != null && withRounds == true)
-                game.Rounds = GameRounds(game.Name);
+            if(game != null)
+            game.Rounds = GameRounds(game.Name);
 
             return game;
         }
@@ -204,7 +203,7 @@ namespace LocalDatabaseManager
             {
                 shouldCreate = true;
                 Games.Remove(game);
-            }
+            }          
 
             if (shouldCreate)
             {

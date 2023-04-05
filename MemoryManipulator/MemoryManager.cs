@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DataLayer;
 using Settings;
-using static System.Net.WebRequestMethods;
 
 namespace MemoryManipulator
 {
@@ -18,14 +16,8 @@ namespace MemoryManipulator
         public static object ViewerBet = new object();
         public static object HotWords = new object();
         public static object BroadcastFile = new object();
-        public static object RedeemsFile = new object();
 
         public static object LockPacaniada = new object();
-
-        public static object SubscriberObject = new object();
-
-        public static object RumbleObject = new object();
-        public static object MemberMap = new object();
     }
     public class GinionistiiLock
     {
@@ -165,20 +157,21 @@ namespace MemoryManipulator
             FileWriter.SaveData(file, bettingModel, CoxinoLockObjects.BettingFile);           
         }
 
-        public string SaveUserBets(string file, string viewerID, int amount, string key)
+        public string SaveUserBets(string file, string viewerID, string user, string amount, string key)
         {
             file =  ProjectSettings.DatabaseFolder + userId + ProjectSettings.LiveBettingUserOptions + key + ".json";
 
             UserBet userBet = new UserBet()
             {
                 UserID = viewerID,
-                Bet = amount
+                Name = user,
+                Bet = int.Parse(amount)
             };
 
             var userBets = FileReader.ReadFile<List<UserBet>>(file) ?? new List<UserBet>();
             userBets.Add(userBet);
             FileWriter.AppendData(file, userBets, CoxinoLockObjects.ViewerBet);
-            return "vote registered!";
+            return string.Format("@{0} votul a fost inregistrat!", userBet.Name);
         }
 
         public string SaveHotWords(string file, object v)
@@ -211,7 +204,7 @@ namespace MemoryManipulator
             return FileReader.ReadFile<int>(file);
         }
 
-        public bool SaveStreamerSettings(StreamerSettings viewerForm)
+        public bool SaveViewerSettings(List<RequestFromViewerForm> viewerForm)
         {
             var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + "RequestFromViewerForm.json";
             return FileWriter.SaveData(file, viewerForm, CoxinoLockObjects.LoyaltyFile);
@@ -233,168 +226,6 @@ namespace MemoryManipulator
         {
             var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + ProjectSettings.LoyaltyUserSettings + viewerId + ".json";
             return FileReader.ReadFile<List<RequestFromViewerForm>>(file);
-        }
-
-        public Dictionary<string,List<RequestFromViewerForm>> GetAllViewersSettings()
-        {
-            Dictionary<string, List<RequestFromViewerForm>> users = new Dictionary<string, List<RequestFromViewerForm>>();
-            var dir = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + ProjectSettings.LoyaltyUserSettings;
-            
-            var dirFiles = Directory.GetFiles(dir, "*.json", SearchOption.AllDirectories);
-
-            foreach(var file in dirFiles)
-            {
-                try
-                {
-                    var fn = Path.GetFileNameWithoutExtension(file);
-                    if (!string.IsNullOrWhiteSpace(fn))
-                        users.Add(fn, GetUserSettingsForStreamerPage(fn));
-                }
-                catch(Exception ex)
-                {
-                    var a = ex.Message;
-                }
-            }
-
-            return users;
-        }
-
-        public List<Redeem> GetAllRedeems()
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.RedeemsFile;
-            return FileReader.ReadFile<List<Redeem>>(file);
-        }
-
-        public void SaveRedeem(Redeem redeem)
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.RedeemsFile;
-            var redeems = GetAllRedeems();
-            if(redeems == null)
-            {
-                redeems = new List<Redeem>();
-            }
-            redeems.Add(redeem);
-            FileWriter.SaveData(file, redeems, CoxinoLockObjects.RedeemsFile);            
-        }
-
-        public bool SaveStreamerTwitchSubscribers(List<TwitchSubscription> response)
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + "TwitchSubscribers.json";
-           return FileWriter.SaveData(file, response, CoxinoLockObjects.SubscriberObject);
-        }
-
-        public List<TwitchSubscription> GetStreamerTwitchSubscribers()
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + "TwitchSubscribers.json";            
-            return FileReader.ReadFile<List<TwitchSubscription>>(file);
-        }
-
-        public void DeleteAllColldown(string v)
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.CooldownFolder + v + ProjectSettings.CooldownFile;
-            System.IO.File.Delete(file);
-        }
-
-        public bool SaveStreamerYoutubeSubscribers(List<YTMember> response)
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + "YoutubeSubscribers.json";
-            return FileWriter.SaveData(file, response, CoxinoLockObjects.SubscriberObject);
-        }
-
-        public List<YTMember> GetStreamerYoutubeSubscribers()
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + "YoutubeSubscribers.json";
-            return FileReader.ReadFile<List<YTMember>>(file);
-        }
-
-        public SlotsRumbleModel GetRumbleSlots()
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.SlotsRumble;
-            return FileReader.ReadFile<SlotsRumbleModel>(file);
-        }
-
-        public bool AddRumbleGame(RumbleMeci rumbleMeci)
-        {
-            var rma = GetRumbleSlots();
-            rma.GameHistory.Add(rumbleMeci);
-
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.SlotsRumble;
-            return FileWriter.SaveData(file, rma, CoxinoLockObjects.RumbleObject);
-        }
-
-        private bool ArchiveRumble(SlotsRumbleModel rma)
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.SlotsRumbleArchive + rma.RumbleId + ".json";
-            return FileWriter.SaveData(file, rma, CoxinoLockObjects.RumbleObject);
-        }
-
-        public bool NewSlotsRumble()
-        {
-            var rma = GetRumbleSlots();
-            if (ArchiveRumble(rma))
-            {
-                var newRma = new SlotsRumbleModel() { RumbleId = rma.RumbleId + 1, GameHistory = new List<RumbleMeci>() { new RumbleMeci() } };
-                var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.SlotsRumble;
-                return FileWriter.SaveData(file, newRma, CoxinoLockObjects.RumbleObject);
-            }
-            return false;
-        }
-
-        public bool RumbleUpdate(SlotsRumbleModel rumbleModel)
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.SlotsRumble;
-            return FileWriter.SaveData(file, rumbleModel, CoxinoLockObjects.RumbleObject);
-        }
-
-        public MemberLevels GetMemberLevels(string slevel)
-        {
-            try
-            {
-                var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.MemberMaps;
-                var q = FileReader.ReadFile<List<YoutubeMemberLevelMap>>(file);
-
-                return q.FirstOrDefault(x => x.MemberLevelString == slevel).MemberLevelEnum;
-            }
-            catch
-            {
-                return MemberLevels.Level1;
-            }
-        }
-
-        public bool SetMemberLevelMap(List<YoutubeMemberLevelMap> levelMaps)
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.MemberMaps;
-            return FileWriter.SaveData(file, levelMaps, CoxinoLockObjects.MemberMap);
-        }
-
-        public List<YoutubeMemberLevelMap> GetMemberLevelMap()
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.MemberMaps;
-            return FileReader.ReadFile<List<YoutubeMemberLevelMap>>(file);
-        }
-
-        public List<Promo> GetUserPromos()
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.UserPromos;
-            return FileReader.ReadFile<List<Promo>>(file);
-        }
-
-        public bool SaveUserPromos(List<Promo> promos)
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.UserPromos;
-            return FileWriter.SaveData(file, promos, CoxinoLockObjects.MemberMap);
-        }
-
-        public List<PromoClicks> GetUserPromosClicks()
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.UserPromosClicks;
-            return FileReader.ReadFile<List<PromoClicks>>(file) ?? new List<PromoClicks>();
-        }
-
-        public bool SaveUserPromosClick(object promos)
-        {
-            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.UserPromosClicks;
-            return FileWriter.SaveData(file, promos, CoxinoLockObjects.MemberMap);
         }
     }
 }

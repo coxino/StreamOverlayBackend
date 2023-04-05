@@ -8,12 +8,18 @@ namespace Settings
 {
     public class ProjectSettings
     {
-        public static string DatabaseFolder = "../database/";
+        public static bool BettingOff
+        {
+            get
+            {
+                return bool.Parse(System.IO.File.ReadAllText(@"C:\API\database\coxino\betting.txt"));
+            }
+        }
+
+        public static string DatabaseFolder = "C:/API/database/";
         public static string User_folder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-        public static string CustomThemeFile = "/customTheme.json"; 
-        public static string UserPromos = "/promos/UserPromos.json"; 
-        public static string UserPromosClicks = "/promos/UserPromosClicks.json"; 
+        public static string CustomThemeFile = "/customTheme.json";
         public static string GamesFile = "/Games.json";
         public static string ProvidersFile = "/Providers.json";
         public static string LiveBonusHuntFile = "/BonusHunts/live.json";    
@@ -30,10 +36,7 @@ namespace Settings
 
         public static string HotWords = "/HotWords.json";
 
-        public static string LoyaltyRanking = "/Loyality/users/"; 
-        public static string MemberMaps = "/Loyality/memberMaps.json"; 
-        public static string SlotsRumble = "/SlotsRumble/currentrumble.json";
-        public static string SlotsRumbleArchive = "/SlotsRumble/History/";
+        public static string LoyaltyRanking = "/Loyality/users/";
         public static string LoyaltyUserSettings = "settings/";
 
         public static string LoyalityGivewayTokens = "/Loyality/givewayTokens.json";
@@ -45,7 +48,7 @@ namespace Settings
 
         public static string Shop = "/shop/shop.json";
 
-        public static string RedeemsFile = "/redeems/redeems.json";
+        public static string RedeemsFile = "/redeems/redeems{0}.json";
 
         public static string LigaFile = "/liga/ligacurenta.json";
 

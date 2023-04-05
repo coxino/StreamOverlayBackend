@@ -29,8 +29,7 @@ namespace JWTManager
 
 	public static class ClaimNames
 	{
-		public static string LoginPlatform = "Platform";
-		public static string UserToken = "YoutubeToken";
+		public static string YoutubeToken = "YoutubeToken";
         public static string Username = "Username";
 		public static string Password = "Password";
 		public static string StreamerId = "UserId";
@@ -39,6 +38,11 @@ namespace JWTManager
 	public class JwtManager
 	{
 		private static string mySecret = "bQeThWmZq4t7w!z%C*F-J@NcRfUjXn2r5u8x/A?D(G+KbPdSgVkYp3s6v9y$B&E)H@McQfThWmZq4t7w!z%C*F-JaNdRgUkXn2r5u8x/A?D(G+KbPeShVmYq3s6v9y$B&E)H@McQfTjWnZr4u7w!z%C*F-JaNdRgUkXp2s5v8y/A?D(G+KbPeShVmYq3t6w9z$C&E)H@McQfTjWnZr4u7x!A%D*G-JaNdRgUkXp2s5v8y/B?E(H+MbPeShVmYq3t";
+
+        public static bool VerifyViewerToken(LocalUser userData)
+        {
+			return GetClaim(userData.authToken, ClaimNames.Username) == userData.userYoutubeID;
+        }
 
         public static string GenerateToken(Account user)
 		{
@@ -171,7 +175,7 @@ namespace JWTManager
 			return usr;
 		}
 
-		public static string GenerateViewerToken(string userId,string youtubeToken,string login)
+		public static string GenerateViewerToken(string userId,string youtubeToken)
 		{
 			var mySecurityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(mySecret));
 
@@ -184,8 +188,7 @@ namespace JWTManager
 				Subject = new ClaimsIdentity(new Claim[]
 				{
 					new Claim(ClaimNames.Username, userId),
-					new Claim(ClaimNames.UserToken, youtubeToken),
-					new Claim(ClaimNames.LoginPlatform, login),
+					new Claim(ClaimNames.YoutubeToken, youtubeToken),
                 }),
 				Expires = DateTime.UtcNow.AddDays(30),
 				Issuer = myIssuer,
@@ -199,9 +202,9 @@ namespace JWTManager
 			return tt;
 		}
 
-        public static string GenerateViewerLoginToken(string userYoutubeID, string youtubeToken,string login)
+        public static string GenerateViewerLoginToken(string userYoutubeID, string youtubeToken)
         {
-			return GenerateViewerToken(userYoutubeID, youtubeToken,login);
+			return GenerateViewerToken(userYoutubeID, youtubeToken);
         }
     }
 }

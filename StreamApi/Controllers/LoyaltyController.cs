@@ -5,7 +5,6 @@ using LocalDatabaseManager;
 using Microsoft.AspNetCore.Mvc;
 using Settings;
 using System.Threading.Tasks;
-using Youtube_Contractor;
 
 namespace StreamApi.Controllers
 {   
@@ -38,9 +37,7 @@ namespace StreamApi.Controllers
             var db = await UserDatabase.GetDatabaseAsync(token, _context);
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
-                var msg = await db.AddPointsAllAsync(ammountToAdd) + " live viewers, recieved " + ammountToAdd + " " + ProjectSettings.NumePuncteLoialitate;
-                await new YoutubeChatWriter().WriteMessageAsync(msg);
-                return Ok(new { status = msg });
+                return Ok(new { status = await db.AddPointsAllAsync(ammountToAdd) + " de persoane au primit cate " + ammountToAdd + " " + ProjectSettings.NumePuncteLoialitate });
             }
 
             return "Nu ati primit puncte ca a crapat";
