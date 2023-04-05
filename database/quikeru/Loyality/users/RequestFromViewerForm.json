@@ -1,0 +1,22 @@
+ {
+    "ChannelId": "@casinosro",
+    "ChannelName": "CasinosRo",
+    "ProfilePicture": "https://yt3.googleusercontent.com/ytc/AL5GRJVjmkZl47r-KmOBOWIYKLiaqssAgGEhS3lodjUu=s88-c-k-c0x00ffffff-no-rj",
+    "BackgroundImage": "https://cdn.discordapp.com/attachments/1008571223543922809/1067652158616514580/Zeeekk_futuristic_casino_interior_neon_lights_shadows_hard_smok_8810390f-7672-4a44-b043-8d984647b109.png",
+    "LoyaltySettings": {
+        "LoyaltyName": "G Coin ",
+        "RewardPerMinute": 5
+    },
+    "ShopSettings": [
+        {
+            "Key":"Nume Superbet",
+            "Value":"",
+            "Reason":"Numele de superbet pentru a primii premiile"
+        },
+        {
+            "Key":"Test",
+            "Value":"",
+            "Reason":"Scrie ce-ti vine in minte"
+        }
+    ]
+}

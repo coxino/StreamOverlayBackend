@@ -17,7 +17,6 @@ namespace DatabaseContextCore
             builder.Property(x => x.StreamerId).HasMaxLength(50).IsRequired(true);
             builder.Property(x => x.ViewerId).HasMaxLength(100).IsRequired(true);
             builder.Property(x => x.Coins).IsRequired(true);
-            builder.Property(x => x.IsMember).IsRequired(true);
         }
     }
 }

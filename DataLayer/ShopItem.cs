@@ -83,7 +83,8 @@ namespace DataLayer
     {
         Normal = 0,
         Code = 1,
-        LoyaltyPoints = 2
+        LoyaltyPoints = 2,
+        Unlucky=100
     }
 
     public class DropItem : IEquatable<DropItem>
