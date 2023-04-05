@@ -1,6 +1,7 @@
 ﻿using DatabaseContext;
 using DatabaseContextCore;
 using DataLayer;
+using Dynamitey.DynamicObjects;
 using JWTManager;
 using LocalDatabseManager;
 using MemoryManipulator;
@@ -16,21 +17,30 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Youtube_Contractor;
+using static Google.Apis.Requests.BatchRequest;
 
 namespace LocalDatabaseManager
 {
     public class Database
     {
+        
+
         DatabaseReadWrite UnmanagedFileModifier;
         MemoryManager MemoryManager;
         public SQLContex SQLContextManager;
         public ValidationModel ValidationResponse { get; set; }
+        
 
         public Database(string username = "", SQLContex contex = null)
         {
             UnmanagedFileModifier = new DatabaseReadWrite(username);
             MemoryManager = new MemoryManager(username);
             SQLContextManager = contex;
+        }
+
+        public Guid GetAccountGuID()
+        {
+            return SQLContextManager.GetAccountGuID();
         }
 
         public string GetAccountID()
@@ -89,6 +99,11 @@ namespace LocalDatabaseManager
             return await SQLContextManager.GetGiveawayList();
         }
 
+        public async Task<List<GivewayTiket>> GetGivewayTikets()
+        {
+            return await SQLContextManager.GetGivewayTikets();
+        }
+
         public async Task<List<ShopItem>> GetShopAsync()
         {
             var shop = UnmanagedFileModifier.ReadFile<List<ShopItem>>(ProjectSettings.Shop);
@@ -101,57 +116,34 @@ namespace LocalDatabaseManager
             MemoryManager.SaveLiveBetting(bettingModel);
         }
 
-        //public async Task<string> BuyGiveawayTiket(GiveawayRequestModel buyTiketModel)
-        //{
-        //    var viewer = await SQLContextManager.GetViewerModel(buyTiketModel.localUser.userYoutubeID);
-        //    GivewayModel giveway = await SQLContextManager.GetGivewayModel(buyTiketModel.giveawayId);
+        public async Task<string> BuyGiveawayTiket(Viewer viewer, int gid)
+        {
+            GivewayModel giveway = await SQLContextManager.GetGivewayModel(gid);
 
-        //    var userTikets = await SQLContextManager.GetViewerGivewayTokens(viewer.Id, giveway.Id);
+            var userTikets = await SQLContextManager.GetViewerGivewayTokens(viewer.Id, giveway.Id);
 
-        //    if(userTikets >= giveway.MaxTikets)
-        //    {
-        //        return $"Nu poti cumpara mai mult de {giveway.MaxTikets} bilete pentru acest giveaway.";
-        //    }
+            if (userTikets >= giveway.MaxTikets)
+            {
+                return $"You can`t buy more than {giveway.MaxTikets} tikets for this giveaway.";
+            }
+            if (await SQLContextManager.RemovePointsToOneUser(viewer, giveway.Price, false))
+            {
+                if (await SQLContextManager.CreateGivewayTiket(viewer, giveway))
+                {
+                    return $"You bought a token!";
+                }
+                else
+                {
+                    if (await SQLContextManager.AddPointToViewerAsync(viewer, giveway.Price, false))
+                    {
+                        return $"Error buying token but you have not been charged!";
+                    }
+                }
+            }
+        
 
-
-        //    if (viewer.MemberLevel > MemberLevels.Coxumator)
-        //    {
-        //        if (viewer.UserCox < giveway.Price * 0.8)
-        //        {
-        //            return $"Nu ai destul cox! Stai pe live si aduna {ProjectSettings.NumePuncteLoialitate}!";
-        //        }
-
-        //        if (await SQLContextManager.CreateGivewayTiket(viewer, giveway))
-        //        {
-        //            if (await SQLContextManager.AddPointToViewerAsync(viewer, (-1 * (int)(giveway.Price * 0.8)),false))
-        //            {
-        //                int cnt = await SQLContextManager.GetViewerGivewayTokens(viewer.Id, giveway.Id);
-        //                int cntTotal = await SQLContextManager.GetGivewayTiketCount(giveway.Id);
-        //                var percent = (double)cnt / cntTotal * 100;
-        //                return $"Felicitari ai fost inscris in giveaway! Acum ai {cnt} tikete din {cntTotal} si ai sanse de {percent:00.00}% sa castigi giveaway-ul. Mai multe bilete mai multe sanse de castig!";
-        //            }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        if (viewer.UserCox < giveway.Price)
-        //        {
-        //            return $"Nu ai destule cox! Stai pe live si aduna {ProjectSettings.NumePuncteLoialitate}!";
-        //        }
-
-        //        if (await SQLContextManager.CreateGivewayTiket(viewer, giveway))
-        //        {
-        //            if (await SQLContextManager.AddPointToViewerAsync(viewer, (-1 * giveway.Price),false))
-        //            {
-        //                int cnt = await SQLContextManager.GetViewerGivewayTokens(viewer.Id, giveway.Id);
-        //                int cntTotal = await SQLContextManager.GetGivewayTiketCount(giveway.Id);
-        //                var percent = (double)cnt / cntTotal * 100;
-        //                return $"Felicitari ai fost inscris in giveaway! Acum ai {cnt} tikete din {cntTotal} si ai sanse de {percent:00.00}% sa castigi giveaway-ul. Mai multe bilete mai multe sanse de castig!";
-        //            }
-        //        }
-        //    }
-        //    return "Ceva a mers prost... Incearca mai tarziu!";
-        //}
+            return "Error";
+        }
 
         public async Task<string> ValidateUser(string accountId)
         {
@@ -201,9 +193,16 @@ namespace LocalDatabaseManager
 
         public string RedeemItem(Viewer user, ShopItem item, string additionaldata = "")
         {
-            string redeemer = string.Format("\r\n[{0}]-[USERID:{1}]-[NUME UTILIZATOR:{2}]-[PRODUS:{3}]-[ADITIONAL:{4}]", DateTime.Now, user.Id, user.Name, item.Nume, additionaldata);
-            string file = string.Format(ProjectSettings.RedeemsFile, item.ItemID);
-            UnmanagedFileModifier.AppendFile(file, redeemer);
+
+            Redeem redeem = new()
+            {
+                UserId = user.Id,
+                ShopItem = item,
+                //ViewerSettings = MemoryManager.GetUserSettingsForStreamerPage(user.Id),
+                WinnerName = user.Name
+            };
+            redeem.ShopItem.OptionalData = additionaldata;
+            MemoryManager.SaveRedeem(redeem);
 
             var shop = UnmanagedFileModifier.ReadFile<List<ShopItem>>(ProjectSettings.Shop);
             shop.FirstOrDefault(x => x.ItemID == item.ItemID && x.Nume == item.Nume).Stoc -= 1;
@@ -242,14 +241,15 @@ namespace LocalDatabaseManager
             return await SQLContextManager.GetViewerByNameAsync(userName);
         }
 
-        public async Task<bool> RemovePointsToOneUser(string userID, int ammount, bool doubleUp = true)
+        public async Task<bool> RemovePointsToOneUser(Viewer viewer, int ammount, bool doubleUp = true)
         {
-            return await SQLContextManager.AddPointToViewerAsync(userID, -1 * ammount, doubleUp);
+            return await SQLContextManager.RemovePointsToOneUser(viewer, ammount, doubleUp);
         }
 
-        public async Task<bool> AddPointsToOneUser(string userID, int ammount, bool doubleUp = true)
+        public async Task<bool> AddPointsToOneUser(Viewer viewer, int ammount, bool doubleUp = false)
         {
-            return await SQLContextManager.AddPointToViewerAsync(userID, ammount, doubleUp);
+            viewer.LastActive = DateTime.Now;
+            return await SQLContextManager.AddPointToViewerAsync(viewer, ammount, doubleUp);
         }
 
         public async Task<int> AddPointsAllAsync(int ammount)
@@ -257,9 +257,15 @@ namespace LocalDatabaseManager
             return await SQLContextManager.AddPointToAllViewersAndCountAsync(ammount);
         }
 
-        public async Task<bool> SetMemberLevel(string id, MemberLevels level, DateTime expires)
+        public async Task<bool> SetMemberLevel(string id, string slevel, DateTime expires)
         {
-            return await SQLContextManager.SetUserLevel(id, level, expires);
+            var level = GetLevel(slevel);
+            return await SQLContextManager.SetUserLevel(id, level, expires.AddDays(31));
+        }
+
+        private MemberLevels GetLevel(string slevel)
+        {
+            return MemoryManager.GetMemberLevels(slevel);
         }
 
         private async Task<bool> SaveLoyaltyAsync(Viewer viewer)
@@ -330,7 +336,13 @@ namespace LocalDatabaseManager
                 Nume = lastOpt
             });
 
+            DeleteAllColldown("bet");
             SetLiveBetting(BettingModel);
+        }
+
+        private void DeleteAllColldown(string v)
+        {
+            MemoryManager.DeleteAllColldown(v);
         }
 
         public void TestFile(string v, string toAppend)
@@ -344,12 +356,19 @@ namespace LocalDatabaseManager
             return MemoryManager.SaveHotWords(file, hotWords);
         }
 
-        public void AddSingleGameToBH(InPlayGame gameName, int betSize)
+        public void AddSingleGameToBH(InPlayGame gameName, double betSize)
         {
             var bonushunt = GetLiveBonusHunt();
             if (bonushunt != null)
             {
-                bonushunt.Bonuses.Add(new BonusHuntGridObject() { BetSize = betSize, PlayerName = gameName.PlayerName, GameName = gameName.Game.Name, Payed = 0, IsCurrent = false, ProviderName = gameName.Game.Provider });
+                if (bonushunt.Bonuses.Any(x => x.GameName == gameName.Game.Name))
+                {
+                    bonushunt.Bonuses.FirstOrDefault(x=>x.GameName == gameName.Game.Name).BetSize = betSize;
+                }
+                else
+                {
+                    bonushunt.Bonuses.Add(new BonusHuntGridObject() { BetSize = betSize, PlayerName = gameName.PlayerName, GameName = gameName.Game.Name, Payed = 0, IsCurrent = false, ProviderName = gameName.Game.Provider });
+                }
             }
 
             UpdateBonusHunt(bonushunt);
@@ -417,7 +436,7 @@ namespace LocalDatabaseManager
         public void SetLiveBetting(BettingModel bettingModel)
         {
             MemoryManager.SaveLiveBetting(bettingModel);
-        }
+        }        
 
         public bool SetInplayGame(InPlayGame inPlayGame)
         {
@@ -512,92 +531,43 @@ namespace LocalDatabaseManager
             }
         }
 
-        public async Task<string> IncrementBettingOptionAsync(string userID, string key, string userName, string amount)
+        public async Task<string> IncrementBettingOptionAsync(string userID, string key, int ammount)
         {
-            try
+
+            if (IsUserOnCooldown(userID, "bet"))
             {
-                if (IsUserOnCooldown(userID, "bet"))
-                {
-                    return string.Format("@{0} ai votat deja!", userName);
-                }
+                return " you can`t vote twice!";
+            }
+
+            var viewer = await GetViewerAsync(userID);
+            if (await RemovePointsToOneUser(viewer, ammount))
+            {
                 var betting = GetLiveBetting();
-                var lp = await SQLContextManager.GetLoyalityAsync();
-
-                if (lp.Any(x => x.Id == userID) == false)
-                {
-                    return await CreateUserFromScrapAsync(userID, userName) + ". Votul nu a fost inregistrat!!!";
-                }
-
-                var userLoyals = lp.Where(x => x.Id == userID).FirstOrDefault();
-                var Coins = userLoyals.Wallets.FirstOrDefault(x => x.StreamerId == GetAccountID()).Coins;
-                if (string.IsNullOrWhiteSpace(userLoyals.Name))
-                {
-                    userLoyals.Name = userName;
-                }
-                if (int.TryParse(amount, out int amm))
-                {
-                    if (amm > betting.MaxBet)
-                    {
-                        return string.Format("@{0} max bet este {1}!", userName, betting.MaxBet);
-                    }
-
-                    if (Coins < amm)
-                    {
-                        return string.Format("@{0} ai {1} de monede de aur nu poti paria {2} de {3}!", userName, Coins, amm, ProjectSettings.NumePuncteLoialitate);
-                    }
-
-                }
 
                 var opt = betting.Options.Where(x => x.Key == key)?.FirstOrDefault();
 
                 if (opt != null)
                 {
                     opt.Voturi++;
-                    opt.TotalPariat += amm;
+                    opt.TotalPariat += ammount;
                 }
                 else
                 {
-                    return string.Format("@{0} ai votat o optiune invalida! Incearca una din urmatoarele optiuni" + betting.Options.Select(x => x.Key).ToString(), userName);
+                    return " invalid betting option! try one of the following :" + betting.Options.Where(x=>x.IsVisible == true).Select(x => x.Key).Aggregate((a, b) => a + ", " + b);
                 }
-
-                //Update Progesses
-                var totalbets = betting.Options.Sum(x => x.Voturi);
-                foreach (var op in betting.Options)
-                {
-                    op.Progress = (int)Math.Round(((double)op.Voturi / totalbets * 100));
-                }
-
-                if (betting.Options.Sum(x => x.Progress) < 100)
-                {
-                    var maxno = betting.Options.Max(x => x.Progress);
-
-                    var max = betting.Options.Where(x => x.Progress == maxno).FirstOrDefault();
-                    max.Progress = maxno + 100 - betting.Options.Sum(x => x.Progress);
-                }
-
-                if (betting.Options.Sum(x => x.Progress) > 100)
-                {
-                    var maxno = betting.Options.Max(x => x.Progress);
-
-                    var max = betting.Options.Where(x => x.Progress == maxno).FirstOrDefault();
-                    max.Progress = maxno - (betting.Options.Sum(x => x.Progress) - 100);
-                }
-
-                userLoyals.Wallets.FirstOrDefault(x => x.StreamerId == GetAccountID()).Coins -= amm;
-                await SaveLoyaltyAsync(userLoyals);
                 SetLiveBetting(betting);
-                AddUserOnCooldown(userID, "bet", 25);
-                string response = SaveUsersBets(userID: userID, key: key, user: userName, amount: amount);
+                AddUserOnCooldown(userID, "bet", 30);
+                string response = SaveUsersBets(userID: userID, key: key, amount: ammount);
 
                 return response;
             }
-            catch
-            {
-                return string.Format("@{0} ceva nu a mers bine incearca din nou!", userName);
+            else
+            {                
+                return $" you have only {(await GetViewerWallet(userID)).Coins} {GetStreamerSettings().LoyaltySettings.LoyaltyName}";
             }
         }
 
-        public async Task<bool> CreateUser(string userID, string name = "", string googleEmail = "")
+        public async Task<bool> CreateUser(string userID, string name = "", string googleEmail = "", string ipAdress = "")
         {
             Viewer viewer = new Viewer()
             {
@@ -606,7 +576,7 @@ namespace LocalDatabaseManager
                 Name = name,
                 LastActive = DateTime.Now,
                 ExpiresMember = DateTime.Now,
-                Ipadress = "",
+                Ipadress = ipAdress,
                 IsActive = false,
                 BroadcastMessageCount = 0,
                 Email = googleEmail,
@@ -668,17 +638,17 @@ namespace LocalDatabaseManager
             }
         }
 
-        private string SaveUsersBets(string userID, string key, string user, string amount)
+        private string SaveUsersBets(string userID, string key, int amount)
         {
             string file = ProjectSettings.LiveBettingUserOptions + key + ".json";
-            return MemoryManager.SaveUserBets(file, viewerID: userID, user, amount, key);
+            return MemoryManager.SaveUserBets(file, viewerID: userID, amount, key);
         }
 
         public void CreateBettingFromTournament(int maxBet)
         {
             BettingModel BettingModel = new BettingModel();
             BettingModel.MaxBet = maxBet;
-            BettingModel.VoteTitle = "Voteaza-ti preferatul!";
+            BettingModel.VoteTitle = "Vote your favourite!";
             List<string> allNames = GetLiveTournament().MeciuriSferturi.Select(x => x.Team1.Nume).ToList();
             allNames.AddRange(GetLiveTournament().MeciuriSferturi.Select(x => x.Team2.Nume).ToList());
             for (int i = 0; i < 8; i++)
@@ -689,6 +659,7 @@ namespace LocalDatabaseManager
                 });
             }
 
+            DeleteAllColldown("bet");
             SetLiveBetting(BettingModel);
         }
 
@@ -797,9 +768,9 @@ namespace LocalDatabaseManager
             SaveInPlayGame(inPlay);
         }
 
-        private Game GetGame(string gameName)
+        private Game GetGame(string gameName, bool withRounds = true)
         {
-            var game = UnmanagedFileModifier.GetGame(gameName) ?? new Game() { Name = gameName };
+            var game = UnmanagedFileModifier.GetGame(gameName,withRounds) ?? new Game() { Name = gameName };
 
             return game;
         }
@@ -1099,6 +1070,39 @@ namespace LocalDatabaseManager
             }
 
             SaveRounds(bonus.GameName, game.Rounds);
+
+            SetInplayGame(bonus.GameName);
+        }
+
+
+        /// <summary>
+        /// ID with - are saved from extension
+        /// </summary>
+        /// <param name="round"></param>
+        public void SaveRecord(Round round)
+        {
+            var gameName = GetInPlayGame().Game.Name;
+            var game = GetGame(gameName);
+            var id = 0;
+
+            if (game.Rounds?.Count > 0)
+            {
+                id = game?.Rounds?.Min(x => x.BonusHuntId) ?? 0;
+                if (id > 0)
+                {
+                    id = 0;
+                }
+            }
+                        
+            id--;
+
+            round.BonusHuntId = id;
+
+            game.Rounds.Add(round);
+
+            var fileName = string.Concat(gameName.Split(Path.GetInvalidFileNameChars()));
+            string file = ProjectSettings.RoundsFolder + fileName.Trim().ToLower() + ".json";
+            UnmanagedFileModifier.WriteFile(file, JsonConvert.SerializeObject(game.Rounds));
         }
 
         private void SaveRounds(string gameName, List<Round> rounds)
@@ -1141,9 +1145,14 @@ namespace LocalDatabaseManager
             return await SQLContextManager.GetYoutubeToken();
         }
 
-        public bool SetViewerSettings(List<RequestFromViewerForm> viewerForm)
+        public async Task<string> GetTwitchToken()
         {
-            return MemoryManager.SaveViewerSettings(viewerForm);
+            return await SQLContextManager.GetTwitchToken();
+        }
+
+        public bool SaveStreamerSettings(StreamerSettings viewerForm)
+        {
+            return MemoryManager.SaveStreamerSettings(viewerForm);
         }
 
         public bool SaveUserSettingsForStreamerPage (List<RequestFromViewerForm> viewerForm, string viewerId)
@@ -1159,6 +1168,131 @@ namespace LocalDatabaseManager
         public StreamerSettings GetStreamerSettings()
         {
             return MemoryManager.StreamerSettings();
+        }
+
+        public List<Redeem> GetAllRedeems()
+        {
+            return MemoryManager.GetAllRedeems();
+        }
+
+        public bool SaveStreamerTwitchSubscribers(List<TwitchSubscription> response)
+        {
+            return MemoryManager.SaveStreamerTwitchSubscribers(response);
+        }
+
+        public List<TwitchSubscription> GetStreamerTwitchSubscribers()
+        {
+            return MemoryManager.GetStreamerTwitchSubscribers();
+        }
+
+        public async Task<bool> SetTwitchToken(string twitchtoken, string twitchid)
+        {
+            return await SQLContextManager.SetTwitchToken(twitchtoken,twitchid);
+        }
+
+        public List<DataLayer.YTMember> GetStreamerYoutubeSubscribers()
+        {
+            return MemoryManager.GetStreamerYoutubeSubscribers();
+        }
+
+        public async Task<bool> IsUserValidAsync(string userID, string username)
+        {
+            Viewer viewer = await SQLContextManager.GetViewerModel(userID);
+            if (viewer != null)
+            {
+                if (string.IsNullOrEmpty(username))
+                    { return true; }
+
+                if(viewer.Name != username)
+                {
+                    viewer.Name = username;
+                    await SQLContextManager.SaveUser(viewer);
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool SaveStreamerYoutubeSubscribers(List<YTMember> subs)
+        {
+            return MemoryManager.SaveStreamerYoutubeSubscribers(subs);
+        }
+
+        public SlotsRumbleModel GetRumbleSlots()
+        {
+            return MemoryManager.GetRumbleSlots();
+        }
+
+        public bool AddRumbleGame(RumbleMeci rumbleMeci)
+        {
+            return MemoryManager.AddRumbleGame(rumbleMeci);
+        }
+
+        public bool ArchiveRumble()
+        {
+            return MemoryManager.NewSlotsRumble();
+        }
+
+        public bool RumbleUpdate(SlotsRumbleModel rumbleModel)
+        {
+            return MemoryManager.RumbleUpdate(rumbleModel);
+        }
+
+        public async Task<List<UserFullProfile>> GetAllViewers()
+        {
+            List<UserFullProfile> toRet = new List<UserFullProfile>();
+            var usrs = MemoryManager.GetAllViewersSettings();
+            foreach(var usrId in usrs.Keys)
+            {
+              var viewer = await GetViewerAsync(usrId);
+                if (viewer != null)
+                {
+                    toRet.Add(new UserFullProfile()
+                    {
+                        UserId = usrId,
+                        Email = viewer.Email,
+                        Name = viewer.Name,
+                        Coins = (await GetViewerWallet(usrId)).Coins,
+                        UserSettings = usrs[usrId]
+                    });
+                }
+            }
+
+            return toRet;
+        }
+
+        public bool SaveMembersMap(List<YoutubeMemberLevelMap> levelMaps)
+        {
+            return MemoryManager.SetMemberLevelMap(levelMaps);
+        }
+
+        public List<YoutubeMemberLevelMap> GetMemberLevelMap()
+        {
+            return MemoryManager.GetMemberLevelMap();
+        }
+
+        public List<Promo> GetUserPromos()
+        {
+            return MemoryManager.GetUserPromos();
+        }
+
+        public bool SaveUserPromos(List<Promo> promos)
+        {
+            return MemoryManager.SaveUserPromos(promos);
+        }
+
+        public List<PromoClicks> GetUserPromosClicks()
+        {
+            return MemoryManager.GetUserPromosClicks();
+        }
+
+        public bool SaveUserPromosClick(List<PromoClicks> upClick)
+        {
+            return MemoryManager.SaveUserPromosClick(upClick);
         }
     }
 }

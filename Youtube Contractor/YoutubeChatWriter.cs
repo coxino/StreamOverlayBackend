@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
@@ -34,7 +35,7 @@ namespace Youtube_Contractor
                 }
 
                 var youtubeService = new YouTubeService(new BaseClientService.Initializer()
-                {                    
+                {
                     HttpClientInitializer = credential,
                     ApplicationName = this.GetType().ToString()
                 });

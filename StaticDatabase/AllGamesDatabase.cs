@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -36,6 +37,8 @@ namespace StaticDatabase
                                 Calificat = false
                             });
                         }
+
+                       allGames = allGames.OrderBy(x => x.Game.Name.Length).ToList();
                     }
                 }
 

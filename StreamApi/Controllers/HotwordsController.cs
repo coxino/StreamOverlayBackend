@@ -32,9 +32,9 @@ namespace StreamApi.Controllers
         }
 
         [HttpPost("addhotword")]
-        public ActionResult<string> Addhotword([FromHeader] string token, [FromHeader] string bettingOption)
+        public ActionResult<string> Addhotword([FromHeader] string token, [FromHeader] string hotword)
         {            
-            HotWords.AddWord(JwtManager.GetClaim(token, ClaimNames.Username).Trim(), bettingOption);
+            HotWords.AddWord(JwtManager.GetClaim(token, ClaimNames.Username).Trim(), hotword);
 
             return Ok(true);
         }
@@ -46,91 +46,49 @@ namespace StreamApi.Controllers
             return Ok(true);
         }
 
-        [HttpPost("final")]
-        public async Task<ActionResult<string>> BalantaFinalaAsync([FromHeader] string token, [FromHeader] string userID, [FromHeader] string ammount)
-        {
-            var db = await UserDatabase.GetGivewayDBAsync(_context);
-            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            {
-                if (int.TryParse(ammount, out int amnt))
-                {
-                    var vr = await db.GetViewerAsync(userID);
-                    if (GiveawayAniversar.AdaugaBalanta(userID, amnt))
-                    {
-                        return $"{vr.Name} ai votat ca balanta finala va fi {amnt}!";
-                    }
-                    else
-                    {
-                        return $"{vr.Name} nu poti vota balanta finala de 2 ori!";
-                    }
-                }
-            }
+        //[HttpGet("bfusers")]
+        //public ActionResult<int> GetBFUsers()
+        //{
+        //   // return FinalBalance.BalantaFinala.Count;
+        //}
 
-            return $"";
-        }
+        
 
-        [HttpGet("bfusers")]
-        public ActionResult<int> GetBFUsers()
-        {
-            return GiveawayAniversar.BalantaFinala.Count;
-        }
+        //[HttpPost("lma")]
+        //public async Task<ActionResult<string>> LaMultiAniAsync([FromHeader] string token, [FromHeader] string userID, [FromHeader] string userName)
+        //{
+        //    var db = await UserDatabase.GetGivewayDBAsync(_context);
+        //    if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
+        //    {
+        //        return FinalBalance.AdaugaUser(userID, userName);
+        //    }
 
-        [HttpPost("extragebf")]
-        public async Task<ActionResult<string>> ExtrageBalantaFinalaAsync([FromHeader] string token,[FromHeader] string ammount)
-        {
-            var db = await UserDatabase.GetGivewayDBAsync(_context);
-            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            {
-                if (int.TryParse(ammount, out int amnt))
-                {
-                    var winner = GiveawayAniversar.CastigatorBalantaFinala(amnt);
+        //    return $"{userName} I'm having problems with your participation in the giveaway!";
+        //}
 
-                    var winnerName = await db.GetViewerAsync(winner);
+        //[HttpGet("lmausers")]
+        //public ActionResult<int> GetLMAUsers()
+        //{
+        //    return FinalBalance.Users.Count;
+        //}
 
-                    await new YoutubeChatWriter().WriteMessageAsync($"Felicitari - {winnerName.Name} ai fost cel mai aproape de balanta finala cu predictia ta {GiveawayAniversar.BalantaFinala[winnerName.Id]}! ID verificare {winner}");
+        //[HttpPost("extragelma")]
+        //public async Task<ActionResult<string>> ExtrageLaMultiAniAsync([FromHeader] string token)
+        //{
+        //    var db = await UserDatabase.GetGivewayDBAsync(_context);
+        //    if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
+        //    {
+        //        var winner =  FinalBalance.ExtrageUnCastigator();
 
-                    return $"Felicitari - {winnerName.Name} ai fost cel mai aproape de balanta finala cu predictia ta {GiveawayAniversar.BalantaFinala[winnerName.Id]}! ID verificare {winner}";
-                }
-            }
+        //        var winnerName = await db.GetViewerAsync(winner);  
 
-            return $"nu am putut extrage niciun castigator!";
-        }
+        //        await new YoutubeChatWriter().WriteMessageAsync($"Felicitari - {winnerName.Name} ai castigat la giveaway! ID verificare {winner}");
 
-        [HttpPost("lma")]
-        public async Task<ActionResult<string>> LaMultiAniAsync([FromHeader] string token, [FromHeader] string userID, [FromHeader] string userName)
-        {
-            var db = await UserDatabase.GetGivewayDBAsync(_context);
-            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            {
-                return GiveawayAniversar.AdaugaUser(userID, userName);
-            }
+        //        return $"Felicitari - {winnerName.Name} ai castigat la giveaway! ID verificare {winner}";
+        //    }
 
-            return $"{userName} intampin probleme cu adaugarea ta in giveaway!";
-        }
-
-        [HttpGet("lmausers")]
-        public ActionResult<int> GetLMAUsers()
-        {
-            return GiveawayAniversar.Users.Count;
-        }
-
-        [HttpPost("extragelma")]
-        public async Task<ActionResult<string>> ExtrageLaMultiAniAsync([FromHeader] string token)
-        {
-            var db = await UserDatabase.GetGivewayDBAsync(_context);
-            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            {
-                var winner =  GiveawayAniversar.ExtrageUnCastigator();
-
-                var winnerName = await db.GetViewerAsync(winner);  
-
-                await new YoutubeChatWriter().WriteMessageAsync($"Felicitari - {winnerName.Name} ai castigat la giveaway! ID verificare {winner}");
-
-                return $"Felicitari - {winnerName.Name} ai castigat la giveaway! ID verificare {winner}";
-            }
-
-            return $"nu am putut extrage niciun castigator!";
-        }
+        //    return $"nu am putut extrage niciun castigator!";
+        //}
 
     }
 }
