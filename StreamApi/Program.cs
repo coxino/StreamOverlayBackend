@@ -16,6 +16,7 @@ namespace StreamApi
 {
     public class Program
     {
+
         public static void Main(string[] args) =>           
         new WebHostBuilder()
             .UseKestrel(config=>

@@ -16,7 +16,6 @@ namespace DataLayer
         public string PlayerName { get; set; }
         public string InHuntNumber { get; set; }
         public Game Game { get; set; }
-        public BonusHuntPreInfo BonusHuntPreInfo { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -28,8 +27,7 @@ namespace DataLayer
             return other != null &&
                    PlayerName == other.PlayerName &&
                    InHuntNumber == other.InHuntNumber &&
-                   EqualityComparer<Game>.Default.Equals(Game, other.Game) &&
-                   EqualityComparer<BonusHuntPreInfo>.Default.Equals(BonusHuntPreInfo, other.BonusHuntPreInfo);
+                   EqualityComparer<Game>.Default.Equals(Game, other.Game);
         }
 
         public override int GetHashCode()
@@ -38,7 +36,6 @@ namespace DataLayer
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(PlayerName);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(InHuntNumber);
             hashCode = hashCode * -1521134295 + EqualityComparer<Game>.Default.GetHashCode(Game);
-            hashCode = hashCode * -1521134295 + EqualityComparer<BonusHuntPreInfo>.Default.GetHashCode(BonusHuntPreInfo);
             return hashCode;
         }
     }

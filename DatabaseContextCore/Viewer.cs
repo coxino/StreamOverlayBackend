@@ -11,7 +11,6 @@ namespace DatabaseContext
     {
         private string id;
         private string name;
-        private int userCox;
         private int broadcastMessageCount;
         private string email;
         private string emailSecundar;
@@ -30,7 +29,6 @@ namespace DatabaseContext
 
         public string Id { get => id; set => id = value; }
         public string Name { get => name; set => name = value; }
-        public int UserCox { get => userCox; set => userCox = value; }
         public string Email { get => email; set => email = value; }
         public string Ipadress { get => ipadress; set => ipadress = value; }
         public DateTime CreationTime { get => creationTime; set => creationTime = value; }
@@ -42,6 +40,8 @@ namespace DatabaseContext
         public DateTime ExpiresMember { get => expiresMember; set => expiresMember = value; }
         public string EmailSecundar { get => emailSecundar; set => emailSecundar = value; }
 
+        public ICollection<ViewerWallet> Wallets { get; set; }
+
         public override bool Equals(object obj)
         {
             return Equals(obj as Viewer);
@@ -49,10 +49,9 @@ namespace DatabaseContext
 
         public bool Equals(Viewer other)
         {
-            return other != null &&
+            return other is not null &&
                    id == other.id &&
                    name == other.name &&
-                   userCox == other.userCox &&
                    broadcastMessageCount == other.broadcastMessageCount &&
                    email == other.email &&
                    emailSecundar == other.emailSecundar &&
@@ -65,7 +64,6 @@ namespace DatabaseContext
                    expiresMember == other.expiresMember &&
                    Id == other.Id &&
                    Name == other.Name &&
-                   UserCox == other.UserCox &&
                    Email == other.Email &&
                    Ipadress == other.Ipadress &&
                    CreationTime == other.CreationTime &&
@@ -75,7 +73,8 @@ namespace DatabaseContext
                    BroadcastMessageCount == other.BroadcastMessageCount &&
                    IsActive == other.IsActive &&
                    ExpiresMember == other.ExpiresMember &&
-                   EmailSecundar == other.EmailSecundar;
+                   EmailSecundar == other.EmailSecundar &&
+                   EqualityComparer<ICollection<ViewerWallet>>.Default.Equals(Wallets, other.Wallets);
         }
 
         public override int GetHashCode()
@@ -83,7 +82,6 @@ namespace DatabaseContext
             HashCode hash = new HashCode();
             hash.Add(id);
             hash.Add(name);
-            hash.Add(userCox);
             hash.Add(broadcastMessageCount);
             hash.Add(email);
             hash.Add(emailSecundar);
@@ -96,7 +94,6 @@ namespace DatabaseContext
             hash.Add(expiresMember);
             hash.Add(Id);
             hash.Add(Name);
-            hash.Add(UserCox);
             hash.Add(Email);
             hash.Add(Ipadress);
             hash.Add(CreationTime);
@@ -107,6 +104,7 @@ namespace DatabaseContext
             hash.Add(IsActive);
             hash.Add(ExpiresMember);
             hash.Add(EmailSecundar);
+            hash.Add(Wallets);
             return hash.ToHashCode();
         }
     }

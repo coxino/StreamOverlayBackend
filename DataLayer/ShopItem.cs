@@ -11,6 +11,8 @@ namespace DataLayer
         public ShopItem()
         {
         }
+
+        public ItemType ItemType { get; set; }
         public string ItemID { get; set; }
         public string Nume { get; set; }
         public int Pret { get; set; }
@@ -22,6 +24,9 @@ namespace DataLayer
         public bool IsVisible { get; set; }
         public double Cooldown { get; set; }
         public string OptionalData { get; set; }
+        public double CooldownValue { get; set; }
+
+        public List<DropItem> Drops { get; set;}
 
         public override bool Equals(object obj)
         {
@@ -30,7 +35,8 @@ namespace DataLayer
 
         public bool Equals(ShopItem other)
         {
-            return other != null &&
+            return !(other is null) &&
+                   ItemType == other.ItemType &&
                    ItemID == other.ItemID &&
                    Nume == other.Nume &&
                    Pret == other.Pret &&
@@ -41,12 +47,15 @@ namespace DataLayer
                    OnlyMembers == other.OnlyMembers &&
                    IsVisible == other.IsVisible &&
                    Cooldown == other.Cooldown &&
-                   OptionalData == other.OptionalData;
+                   OptionalData == other.OptionalData &&
+                   CooldownValue == other.CooldownValue &&
+                   EqualityComparer<List<DropItem>>.Default.Equals(Drops, other.Drops);
         }
 
         public override int GetHashCode()
         {
-            int hashCode = 1483826258;
+            int hashCode = -1983706298;
+            hashCode = hashCode * -1521134295 + ItemType.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ItemID);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Nume);
             hashCode = hashCode * -1521134295 + Pret.GetHashCode();
@@ -58,6 +67,57 @@ namespace DataLayer
             hashCode = hashCode * -1521134295 + IsVisible.GetHashCode();
             hashCode = hashCode * -1521134295 + Cooldown.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(OptionalData);
+            hashCode = hashCode * -1521134295 + EqualityComparer<double>.Default.GetHashCode(CooldownValue);
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<DropItem>>.Default.GetHashCode(Drops);
+            return hashCode;
+        }
+    }
+
+    public enum ItemType
+    {
+        NormalItem = 0,
+        MysteryBox = 1
+    }
+
+    public enum DropType
+    {
+        Normal = 0,
+        Code = 1,
+        LoyaltyPoints = 2
+    }
+
+    public class DropItem : IEquatable<DropItem>
+    {
+        public DropItem()
+        {
+        }
+
+        public string Name { get; set; }
+        public int Luck { get; set; }
+        public DropType DropType { get; set; }
+        public string DropList { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as DropItem);
+        }
+
+        public bool Equals(DropItem other)
+        {
+            return !(other is null) &&
+                   Name == other.Name &&
+                   Luck == other.Luck &&
+                   DropType == other.DropType &&
+                   DropList == other.DropList;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = 660267070;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+            hashCode = hashCode * -1521134295 + Luck.GetHashCode();
+            hashCode = hashCode * -1521134295 + DropType.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(DropList);
             return hashCode;
         }
     }

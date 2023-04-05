@@ -197,5 +197,35 @@ namespace MemoryManipulator
             var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.HotWords;
             return FileReader.ReadFile<List<HotWord>>(file) ?? new List<HotWord>();
         }
+
+        public int ReadCoins(string userID)
+        {
+            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + userID + ".json";
+            return FileReader.ReadFile<int>(file);
+        }
+
+        public bool SaveViewerSettings(List<RequestFromViewerForm> viewerForm)
+        {
+            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + "RequestFromViewerForm.json";
+            return FileWriter.SaveData(file, viewerForm, CoxinoLockObjects.LoyaltyFile);
+        }
+
+        public StreamerSettings StreamerSettings()
+        {
+            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + "RequestFromViewerForm.json";
+            return  FileReader.ReadFile<StreamerSettings>(file);
+        }
+
+        public bool SaveUserSettingsForStreamerPage(List<RequestFromViewerForm> viewerForm,string viewerId)
+        {
+            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + ProjectSettings.LoyaltyUserSettings + viewerId + ".json";
+            return FileWriter.SaveData(file, viewerForm, CoxinoLockObjects.LoyaltyFile);
+        }
+
+        public List<RequestFromViewerForm> GetUserSettingsForStreamerPage(string viewerId)
+        {
+            var file = ProjectSettings.DatabaseFolder + userId + ProjectSettings.LoyaltyRanking + ProjectSettings.LoyaltyUserSettings + viewerId + ".json";
+            return FileReader.ReadFile<List<RequestFromViewerForm>>(file);
+        }
     }
 }

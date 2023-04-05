@@ -15,6 +15,7 @@ namespace DataLayer
             Bonuses = new List<BonusHuntGridObject>();
         }
 
+        public string HuntInfo { get; set; }   
         public int HuntNumber { get; set; }
         public int HuntValue { get; set; }
         public List<BonusHuntGridObject> Bonuses { get; set; }
@@ -32,6 +33,7 @@ namespace DataLayer
         {
             return other != null &&
                    HuntNumber == other.HuntNumber &&
+                   HuntInfo == other.HuntInfo &&
                    HuntValue == other.HuntValue &&
                    EqualityComparer<List<BonusHuntGridObject>>.Default.Equals(Bonuses, other.Bonuses) &&
                    BonusHuntEnd == other.BonusHuntEnd &&
@@ -44,6 +46,7 @@ namespace DataLayer
         {
             int hashCode = -1911943793;
             hashCode = hashCode * -1521134295 + HuntNumber.GetHashCode();
+            hashCode = hashCode * -1521134295 + HuntInfo.GetHashCode();
             hashCode = hashCode * -1521134295 + HuntValue.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<List<BonusHuntGridObject>>.Default.GetHashCode(Bonuses);
             hashCode = hashCode * -1521134295 + BonusHuntEnd.GetHashCode();

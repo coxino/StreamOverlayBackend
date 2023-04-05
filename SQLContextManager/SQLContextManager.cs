@@ -1,9 +1,13 @@
 ﻿using DatabaseContext;
+using DatabaseContextCore;
 using JWTManager;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace SQLContextManager
@@ -11,7 +15,7 @@ namespace SQLContextManager
     public class SQLContex
     {
         private ApplicationDbContext _context;
-        private Guid UserId;
+        private Guid StreamerId;
 
         public SQLContex()
         {
@@ -20,7 +24,15 @@ namespace SQLContextManager
         public SQLContex(ApplicationDbContext context, Guid userId)
         {
             _context = context;
-            UserId = userId;
+            StreamerId = userId;
+        }
+
+        public SQLContex(ApplicationDbContext context, string streamerId)
+        {
+            _context = context;
+
+
+            StreamerId = _context.Accounts.FirstOrDefault(x => x.Username == streamerId)?.Id ?? new Guid();
         }
 
         public async Task<List<Viewer>> GetLoyalityAsync()
@@ -35,26 +47,11 @@ namespace SQLContextManager
         /// </summary>
         /// <param name="ammount"></param>
         /// <returns>success</returns>
-        public async Task<bool> AddPointToAllViewersAsync(int ammount)
-        {
-            var usersLoyalty = await GetLoyalityAsync();
-            var userLoyaltyAux = usersLoyalty;
-            foreach (var user in userLoyaltyAux)
-            {
-                var existingChild = user;
-                if (existingChild.LastActive.AddMinutes(15) > DateTime.Now)
-                {
-                    existingChild.UserCox += ammount;
-                    _context.Entry(user).CurrentValues.SetValues(existingChild);
-                }
-            }
-
-            return await _context.SaveChangesAsync() > 0;
-        }
+       
 
         public string GetAccountID()
         {
-            return UserId.ToString();
+            return StreamerId.ToString();
         }
 
         public async Task<int> AddPointToAllViewersAndCountAsync(int ammount)
@@ -75,10 +72,10 @@ namespace SQLContextManager
                         case MemberLevels.Coxumator:
                         case MemberLevels.Gangster:
                         case MemberLevels.ElChapo:
-                            existingChild.UserCox += ammount * 2;
+                            existingChild.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount * 2;
                             break;
                         default:
-                            existingChild.UserCox += ammount;
+                            existingChild.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount;
                             break;
                     }                   
                     _context.Entry(user).CurrentValues.SetValues(existingChild);
@@ -101,6 +98,22 @@ namespace SQLContextManager
             return await _context.Giveways.ToListAsync();
         }
 
+        public async Task<ViewerWallet> CreateUserWallet(string viewerId)
+        {
+            var viewerWallet = new ViewerWallet()
+            {
+                Coins = 0,
+                IsMember = false,
+                StreamerId = GetAccountID(),
+                ViewerId = viewerId            
+            };
+
+            await _context.ViewerWallets.AddAsync(viewerWallet);
+
+            return await _context.SaveChangesAsync() > 0 ? viewerWallet : null;
+        }
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -116,8 +129,8 @@ namespace SQLContextManager
             }
             else
             {
-               return await CreateUser(viewer);
-            }            
+                return await CreateUser(viewer);
+            }
         }
 
         public async Task<bool> CreateGivewayTiket(Viewer viewer, GivewayModel giveway)
@@ -221,8 +234,7 @@ namespace SQLContextManager
                     LastActive = DateTime.Now,
                     CreationTime = DateTime.Now,
                     Email = "",
-                    Id = viewerID,
-                    UserCox = 25,
+                    Id = viewerID,                    
                     Ipadress = "",
                     MemberLevel = MemberLevels.Viewer,
                     Name = viewerName,
@@ -271,7 +283,8 @@ namespace SQLContextManager
         /// <returns></returns>
         public async Task<Viewer> GetViewerModel(string userID)
         {
-            return await _context.Viewers.FirstOrDefaultAsync(x => x.Id == userID);
+            
+            return await _context.Viewers.Include(x => x.Wallets).FirstOrDefaultAsync(x => x.Id == userID);
         }
 
         public async Task<bool> AddPointToViewerAsync(Viewer viewer, int ammount, bool doubleUp = true)
@@ -286,18 +299,18 @@ namespace SQLContextManager
                     case MemberLevels.Gangster:
                     case MemberLevels.ElChapo:
                         ammount *= 2;
-                        viewer.UserCox += ammount;
+                        viewer.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount;
                         break;
                     default:
-                        viewer.UserCox += ammount;
+                        viewer.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount;
                         break;
                 }
             }
             else
             {
-                viewer.UserCox += ammount;
+                viewer.Wallets.FirstOrDefault(x => x.StreamerId == StreamerId.ToString()).Coins += ammount;
             }
-               
+
             return await SaveUser(viewer);
         }
 
@@ -344,6 +357,28 @@ namespace SQLContextManager
             viewer.MemberLevel = level;
             viewer.ExpiresMember = expires;
             return await SaveUser(viewer);
+        }
+
+        public async Task<ViewerWallet> GetViewerWallet(string viewerId)
+        {
+            var viewer = await GetViewerModel(viewerId);
+            if (viewer.Wallets.Any(x => x.StreamerId == GetAccountID()))
+            {
+                return viewer.Wallets.FirstOrDefault(x => x.StreamerId == GetAccountID());
+            }
+
+           return await CreateUserWallet(viewerId);
+        }
+
+        public async Task<bool> SetYoutubeToken(string youtubetoken)
+        {
+            (await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == StreamerId)).YoutubeToken = youtubetoken;
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<string> GetYoutubeToken()
+        {
+           return (await _context.Accounts.FirstOrDefaultAsync(x => x.Id == StreamerId)).YoutubeToken;
         }
     }
 }

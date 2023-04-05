@@ -20,31 +20,6 @@ namespace StreamApi.Controllers
             _context = context;
         }
 
-        [HttpPost("userCoins")]
-        public async Task<ActionResult<LocalUser>> GetAsync([FromBody] LocalUser userData)
-        {
-            if(string.IsNullOrEmpty(userData.authToken) && string.IsNullOrEmpty(userData.userYoutubeID) == false)
-            {
-                //generate token
-                string newToken = JwtManager.GenerateViewerLoginToken(userData.userYoutubeID);
-                userData.authToken = newToken;
-            }
-
-            //isLogin by token
-            if(string.IsNullOrEmpty(userData.authToken) == false && string.IsNullOrEmpty(userData.userYoutubeID))
-            {
-                userData.userYoutubeID = JwtManager.GetClaim(userData.authToken, ClaimNames.Username);
-            }
-
-
-            var db = await UserDatabase.GetGivewayDBAsync(_context);
-            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
-            {
-                return Ok(new { localUser = await db.GetCoxiCoinsAsync(userData) });
-            }
-            else return new LocalUser();
-        }
-
         [HttpPost("updateuser")]
         public async Task<ActionResult<string>> UpdateUserAsync([FromHeader] string token, [FromBody] Viewer userLoyal)
         {

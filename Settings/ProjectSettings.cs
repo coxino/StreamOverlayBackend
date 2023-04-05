@@ -36,7 +36,9 @@ namespace Settings
 
         public static string HotWords = "/HotWords.json";
 
-        public static string LoyalityRanking = "/Loyality/usersPoints.json";
+        public static string LoyaltyRanking = "/Loyality/users/";
+        public static string LoyaltyUserSettings = "settings/";
+
         public static string LoyalityGivewayTokens = "/Loyality/givewayTokens.json";
 
         public static string JackpotFile = "/Loyality/Jackpot.json";

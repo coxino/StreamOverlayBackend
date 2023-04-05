@@ -20,10 +20,15 @@ namespace LocalDatabaseManager
             return new Database(username);
         }
 
-        public static async Task<Database> GetGivewayDBAsync(ApplicationDbContext context)
-        {
-            var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6ImNveGlubyAgICAiLCJQYXNzd29yZCI6IlczeU12SHlUNzQ1YVpuYUMiLCJVc2VySWQiOiI3OTYzZmYwOC04OGU2LTRjZTUtOGI0Zi1mN2MwYmNiOWU3ODMiLCJuYmYiOjE2NTk0NzQyNzUsImV4cCI6MTY2MDA3OTA3NSwiaWF0IjoxNjU5NDc0Mjc1LCJpc3MiOiJodHRwOi8vbXlzaXRlLmNvbSIsImF1ZCI6Imh0dHA6Ly9teWF1ZGllbmNlLmNvbSJ9.DejS2cDdqQnnjTCD0DnJiqssaYd3VhqfHntGtpYDtpk";
-            return await new Database().LoginUserAsync(token, context);
+        /// <summary>
+        /// Resolve this, can cause issues
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="streamerId"></param>
+        /// <returns></returns>
+        public static async Task<Database> GetGivewayDBAsync(ApplicationDbContext context, string streamerId = "")
+        {            
+            return new Database().LoginUserReadOnlyAsync(streamerId, context);
         }
     }
 }

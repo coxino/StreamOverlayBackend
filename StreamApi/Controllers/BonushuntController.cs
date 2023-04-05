@@ -4,9 +4,6 @@ using JWTManager;
 using LocalDatabaseManager;
 using Microsoft.AspNetCore.Mvc;
 using StaticDatabase;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace StreamApi.Controllers
@@ -25,6 +22,7 @@ namespace StreamApi.Controllers
         public BonusHuntFullInfo GetAsync([FromHeader] string token, [FromHeader] string username)
         {
             var bh = UserDatabase.GetByUsername(username).GetLiveBonusHunt();
+           // bh.HuntInfo = UserDatabase.GetByUsername(username).getInfoFromBH(bh);
             return bh;
         }
 

@@ -10,18 +10,6 @@ namespace DatabaseContext
         {
         }
 
-        public Account(Guid id, string username, string password, bool isbanned, DateTime created, DateTime subscription, int role, string email)
-        {
-            Id = id;
-            this.Username = username;
-            this.Password = password;
-            this.IsBanned = isbanned;
-            this.Created = created;
-            this.Subscription = subscription;
-            this.Role = role;
-            this.Email = email;
-        }
-
         [Key]
         public Guid Id { get; set; }
         public string Username { get; set; }
@@ -31,6 +19,7 @@ namespace DatabaseContext
         public DateTime Subscription { get; set; }
         public int Role { get; set; }
         public string Email { get; set; }
+        public string YoutubeToken { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -39,7 +28,7 @@ namespace DatabaseContext
 
         public bool Equals(Account other)
         {
-            return other != null &&
+            return other is not null &&
                    Id.Equals(other.Id) &&
                    Username == other.Username &&
                    Password == other.Password &&
@@ -47,7 +36,8 @@ namespace DatabaseContext
                    Created == other.Created &&
                    Subscription == other.Subscription &&
                    Role == other.Role &&
-                   Email == other.Email;
+                   Email == other.Email &&
+                   YoutubeToken == other.YoutubeToken;
         }
 
         public override int GetHashCode()
@@ -61,6 +51,7 @@ namespace DatabaseContext
             hash.Add(Subscription);
             hash.Add(Role);
             hash.Add(Email);
+            hash.Add(YoutubeToken);
             return hash.ToHashCode();
         }
     }
