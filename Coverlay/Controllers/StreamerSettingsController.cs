@@ -31,17 +31,26 @@ namespace Coverlay.Controllers
             if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
             {
                 var rdm = db.GetAllRedeems();
-                if(rdm != null)
-                foreach(var redeem in rdm)
+                if (rdm != null)
                 {
-                    redeem.ViewerSettings = db.GetUserSettingsForStreamerPage(redeem.UserId);                    
+                    foreach (var redeem in rdm)
+                    {
+                        try
+                        {
+                            redeem.ViewerSettings = db.GetUserSettingsForStreamerPage(redeem.UserId);
+                        }
+                        catch
+                        {
+                            redeem.ViewerSettings = new List<RequestFromViewerForm>();
+                        }
+                    }
                 }
 
                 var allv = await db.GetAllViewers() ?? new List<UserFullProfile>();
-                var allytm = db.GetStreamerYoutubeSubscribers() ?? new List<YTMember>();
-                var alltwm = db.GetStreamerTwitchSubscribers() ?? new List<TwitchSubscription>();
+                var allytm = new List<YTMember>();
+                var alltwm = new List<TwitchSubscription>();
 
-                return Ok(new { redeems = rdm, allViewers = allv, ytmembers = allytm, twitchmembers = alltwm});
+                return Ok(new { redeems = rdm, allViewers = allv, ytmembers = allytm, twitchmembers = alltwm });
             }
 
             return Ok("Error");

@@ -141,16 +141,16 @@ namespace Coverlay.Controllers
                 var gs = await db.GetGivewayListAsync();
                 var gt = await db.GetGivewayTikets();
 
-                if(gt?.Any(x=>x.ViewerID == viewerID) == true)
-                {
-                    if(gt.FirstOrDefault(x=>x.ViewerID == viewerID).GiveawayID != givewayId)
-                    {
-                        return BadRequest(new
-                        {
-                            msg = "Poti sustine doar un singur streamer!"
-                        });
-                    }
-                }
+                //if(gt?.Any(x=>x.ViewerID == viewerID) == true)
+                //{
+                //    if(gt.FirstOrDefault(x=>x.ViewerID == viewerID).GiveawayID != givewayId)
+                //    {
+                //        return BadRequest(new
+                //        {
+                //            msg = "Poti sustine doar un singur streamer!"
+                //        });
+                //    }
+                //}
 
                 var utilizator = await db.GetViewerAsync(viewerID);
 
@@ -166,9 +166,9 @@ namespace Coverlay.Controllers
                 db.AddUserOnCooldown(viewerID, "buyTiket", 0.09);
                 return Ok(new { msg = await db.BuyGiveawayTiket(utilizator, givewayId) });
             }
-            catch
+            catch(Exception ex)
             {
-                return BadRequest(new { msg = "Failed to buy giveaway tiket!" });
+                return BadRequest(new { msg = "Failed to buy giveaway tiket! + " + ex.Message });
             }
         }
     }

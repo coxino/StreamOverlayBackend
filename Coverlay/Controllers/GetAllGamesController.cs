@@ -50,9 +50,9 @@ namespace Coverlay.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<InPlayGame>> GetAsync()
+        public ActionResult<List<Game>> GetAsync()
         {
-            return Ok(new { allgames = StaticDatabase.AllGamesDatabase.AllGames });
+            return Ok(new { allgames = StaticDatabase.AllGamesDatabase.AllGames.Count });
         }
 
         [HttpPost("sellGame")]

@@ -15,10 +15,8 @@ namespace DatabaseContext
         public Guid Id { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
-        public bool IsBanned { get; set; }
         public DateTime Created { get; set; }
         public DateTime Subscription { get; set; }
-        public int Role { get; set; }
         public string Email { get; set; }
         public string YoutubeToken { get; set; }
         public string TwitchToken { get; set; }
@@ -35,10 +33,8 @@ namespace DatabaseContext
                    Id.Equals(other.Id) &&
                    Username == other.Username &&
                    Password == other.Password &&
-                   IsBanned == other.IsBanned &&
                    Created == other.Created &&
                    Subscription == other.Subscription &&
-                   Role == other.Role &&
                    Email == other.Email &&
                    YoutubeToken == other.YoutubeToken &&
                    TwitchToken == other.TwitchToken &&
@@ -51,10 +47,8 @@ namespace DatabaseContext
             hash.Add(Id);
             hash.Add(Username);
             hash.Add(Password);
-            hash.Add(IsBanned);
             hash.Add(Created);
             hash.Add(Subscription);
-            hash.Add(Role);
             hash.Add(Email);
             hash.Add(YoutubeToken);
             hash.Add(TwitchToken);

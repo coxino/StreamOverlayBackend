@@ -60,7 +60,7 @@ namespace Youtube_Contractor
             }
             catch (Exception ex)
             {
-                System.IO.File.AppendAllText("c:/logareYT/failed.txt", $"{DateTime.Now} - ERROR - {message} \r\n {ex.Message} \r\n");
+                //System.IO.File.AppendAllText("../logareYT/failed.txt", $"{DateTime.Now} - ERROR - {message} \r\n {ex.Message} \r\n");
             }
         }
     }

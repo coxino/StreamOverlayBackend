@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataLayer\DataLayer.csproj" />
+    <ProjectReference Include="..\Settings\Settings.csproj" />
     <ProjectReference Include="..\Youtube Contractor\Youtube Contractor.csproj" />
   </ItemGroup>
 

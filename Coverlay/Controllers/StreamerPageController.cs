@@ -161,129 +161,135 @@ namespace Coverlay.Controllers
         [HttpGet("buyitem")]
         public async Task<ActionResult<object>> BuyItemAsync([FromQuery] string streamerid, [FromQuery] string localUserToken, [FromQuery] string itemid)
         {
-            
-
-            var userid = "";
             try
             {
-              userid = JwtManager.GetClaim(localUserToken, ClaimNames.Username);
-            }
-            catch
-            {
-                return BadRequest(new { status = false, reason = "Invalid Login" });
-            }
 
-          
-
-            var db = await UserDatabase.GetGivewayDBAsync(_context, streamerid);
-
-            if (itemid == "quikesustinator")
-            {
-                var gt = await db.GetGivewayTikets();
-                if (!gt.Any(x => x.ViewerID == userid && x.GiveawayID == 1059))
+                var userid = "";
+                try
                 {
-                    return Ok(new { status = false, reason = "Trebuie sa-l sustii pe CasinosRo sa poti deschide acest pachet!" });
+                    userid = JwtManager.GetClaim(localUserToken, ClaimNames.Username);
                 }
-            }
-
-            var utilizator = await db.GetViewerAsync(userid);
-            bool IsMember = db.GetStreamerYoutubeSubscribers().Any(x => x.MemberId == utilizator.Id);
-                        
-            if (utilizator.IsActive == false && IsMember == false)
-            {
-                return Ok(new { status = false, reason = "You must validate your account to be able to buy from the site!" });
-            }
-
-            var shop = await db.GetShopAsync();
-            var item = shop.FirstOrDefault(x => x.ItemID == itemid);
-
-            if (item == null)
-            {
-                return Ok(new { status = false, reason = "Product not found!" });
-            }
-
-            if (item.OnlyMembers == true)
-            {
-                if (!IsMember)
+                catch
                 {
-                    return Ok(new { status = false, reason = "The product can only be bought by subscribers/members of this channel!" });
+                    return BadRequest(new { status = false, reason = "Invalid Login" });
                 }
-            }
 
-            if (item.Stoc < 1)
-            {
-                return Ok(new { status = false, reason = "Unfortunately, the product is no longer in stock!" });
-            }
 
-            if (db.IsUserOnCooldown(userid, "shop"))
-            {
-                return Ok(new { status = false, reason = "You can use the shop once every 5 seconds!" });
-            }
 
-            db.AddUserOnCooldown(userid, "shop", 0.08);
+                var db = await UserDatabase.GetGivewayDBAsync(_context, streamerid);
 
-            if (db.IsUserOnCooldown(utilizator.Id, item.ItemID))
-            {
-                return Ok(new { status = false, reason = "You can buy this product at the date and time -" + db.sGetUserCooldown(utilizator.Id, item.ItemID) });
-            }
-
-            if (utilizator.Wallets.FirstOrDefault(x => x.StreamerId == db.GetAccountID()).Coins < item.Pret)
-            {
-                return Ok(new { status = false, reason = $"You do not have enough {db.GetStreamerSettings().LoyaltySettings.LoyaltyName} for this product!" });
-            }
-            else
-            {               
-                await db.RemovePointsToOneUser(utilizator, item.Pret, false);
-            }
-
-            db.AddUserOnCooldown(utilizator.Id, item.ItemID, item.Cooldown);
-
-            if (item.ItemType == ItemType.NormalItem)
-            {
-                db.RedeemItem(utilizator, item, item.Nume);
-                await Program.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} just bought [{item.Nume}] from the !shop.");
-                return Ok(new { status = true, reason = $"Congratulations on your purchase {item.Nume}!" });
-
-            }
-
-            if (item.ItemType == ItemType.MysteryBox)
-            {
-                int maxLuck = item.Drops.Sum(d => d.Luck);
-                int number = new Random().Next(1, maxLuck);
-                DropItem reward = new DropItem();
-
-                int a = -1;
-                foreach (var x in item.Drops)
+                if (itemid == "quikesustinator")
                 {
-                    if (number > a && number <= a + x.Luck)
+                    var gt = await db.GetGivewayTikets();
+                    if (!gt.Any(x => x.ViewerID == userid && x.GiveawayID == 1059))
                     {
-                        reward = x;
-                        break;
+                        return Ok(new { status = false, reason = "Trebuie sa-l sustii pe CasinosRo sa poti deschide acest pachet!" });
                     }
-                    a += x.Luck;
                 }
 
-                if (reward.DropType == DropType.Normal)
+                var utilizator = await db.GetViewerAsync(userid);
+                bool IsMember = db.GetStreamerYoutubeSubscribers().Any(x => x.MemberId == utilizator.Id);
+
+                if (utilizator.IsActive == false && IsMember == false)
                 {
-                    db.RedeemItem(utilizator, item, reward.Name);
-                    //await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} just found {reward.Name} inside {item.Nume}, visit the shop and try it yourself.");
-                    return Ok(new { status = true, reason = $"Congratulations you won {reward.Name} from {item.Nume}" });
+                    return Ok(new { status = false, reason = "You must validate your account to be able to buy from the site!" });
                 }
-                else if (reward.DropType == DropType.LoyaltyPoints)
-                {                    
-                    //await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} just won {reward.DropList}{Settings.ProjectSettings.NumePuncteLoialitate} from {item.Nume} on !shop try it too.");
-                    return Ok(new { status = true, reason = await db.WinPointsAsync(utilizator, int.Parse(reward.DropList)) });
-                }
-                else if (reward.DropType == DropType.Code)
+
+                var shop = await db.GetShopAsync();
+                var item = shop.FirstOrDefault(x => x.ItemID == itemid);
+
+                if (item == null)
                 {
-                    db.RedeemItem(utilizator, item, reward.Name);
-                    //await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} just won {reward.Name} from {item.Nume}, visit the shop and try it yourself.");
-                    return Ok(new { status = true, reason = $"You won {reward.Name} from {item.Nume} - you get the {reward.Name} on your email." });
+                    return Ok(new { status = false, reason = "Product not found!" });
                 }
-                else if(reward.DropType == DropType.Unlucky)
+
+                if (item.OnlyMembers == true)
                 {
-                    return Ok(new { status = true, unlucky=true ,reason = $"You opened {item.Nume} - and you found {reward.Name}. Better luck next time." });
+                    if (!IsMember)
+                    {
+                        return Ok(new { status = false, reason = "The product can only be bought by subscribers/members of this channel!" });
+                    }
                 }
+
+                if (item.Stoc < 1)
+                {
+                    return Ok(new { status = false, reason = "Unfortunately, the product is no longer in stock!" });
+                }
+
+                if (db.IsUserOnCooldown(userid, "shop"))
+                {
+                    return Ok(new { status = false, reason = "You can use the shop once every 5 seconds!" });
+                }
+
+                db.AddUserOnCooldown(userid, "shop", 0.08);
+
+                if (db.IsUserOnCooldown(utilizator.Id, item.ItemID))
+                {
+                    return Ok(new { status = false, reason = "You can buy this product at the date and time -" + db.sGetUserCooldown(utilizator.Id, item.ItemID) });
+                }
+
+                if (utilizator.Wallets.FirstOrDefault(x => x.StreamerId == db.GetAccountID()).Coins < item.Pret)
+                {
+                    return Ok(new { status = false, reason = $"You do not have enough {db.GetStreamerSettings().LoyaltySettings.LoyaltyName} for this product!" });
+                }
+                else
+                {
+                    await db.RemovePointsToOneUser(utilizator, item.Pret, false);
+                }
+
+                db.AddUserOnCooldown(utilizator.Id, item.ItemID, item.Cooldown);
+
+                if (item.ItemType == ItemType.NormalItem)
+                {
+                    db.RedeemItem(utilizator, item, item.Nume);
+                    await Program.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} just bought [{item.Nume}] from the !shop.");
+                    return Ok(new { status = true, reason = $"Congratulations on your purchase {item.Nume}!" });
+
+                }
+
+                if (item.ItemType == ItemType.MysteryBox)
+                {
+                    int maxLuck = item.Drops.Sum(d => d.Luck);
+                    int number = new Random().Next(1, maxLuck);
+                    DropItem reward = new DropItem();
+
+                    int a = -1;
+                    foreach (var x in item.Drops)
+                    {
+                        if (number > a && number <= a + x.Luck)
+                        {
+                            reward = x;
+                            break;
+                        }
+                        a += x.Luck;
+                    }
+
+                    if (reward.DropType == DropType.Normal)
+                    {
+                        db.RedeemItem(utilizator, item, reward.Name);
+                        //await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} just found {reward.Name} inside {item.Nume}, visit the shop and try it yourself.");
+                        return Ok(new { status = true, reason = $"Congratulations you won {reward.Name} from {item.Nume}" });
+                    }
+                    else if (reward.DropType == DropType.LoyaltyPoints)
+                    {
+                        //await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} just won {reward.DropList}{Settings.ProjectSettings.NumePuncteLoialitate} from {item.Nume} on !shop try it too.");
+                        return Ok(new { status = true, reason = await db.WinPointsAsync(utilizator, int.Parse(reward.DropList)) });
+                    }
+                    else if (reward.DropType == DropType.Code)
+                    {
+                        db.RedeemItem(utilizator, item, reward.Name);
+                        //await Startup.YoutubeChatWriter.WriteMessageAsync($"@{utilizator.Name} just won {reward.Name} from {item.Nume}, visit the shop and try it yourself.");
+                        return Ok(new { status = true, reason = $"You won {reward.Name} from {item.Nume} - you get the {reward.Name} on your email." });
+                    }
+                    else if (reward.DropType == DropType.Unlucky)
+                    {
+                        return Ok(new { status = true, unlucky = true, reason = $"You opened {item.Nume} - and you found {reward.Name}. Better luck next time." });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { status = false, reason = ex.Message });
             }
 
             return Ok(new { status = false, reason = "" });

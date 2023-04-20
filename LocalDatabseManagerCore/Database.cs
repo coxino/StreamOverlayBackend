@@ -5,6 +5,7 @@ using Dynamitey.DynamicObjects;
 using JWTManager;
 using LocalDatabseManager;
 using MemoryManipulator;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 using Settings;
 using SQLContextManager;
@@ -1248,16 +1249,30 @@ namespace LocalDatabaseManager
             var usrs = MemoryManager.GetAllViewersSettings();
             foreach(var usrId in usrs.Keys)
             {
-              var viewer = await GetViewerAsync(usrId);
-                if (viewer != null)
+                try
+                {
+                    var viewer = await GetViewerAsync(usrId);
+                    if (viewer != null)
+                    {
+                        toRet.Add(new UserFullProfile()
+                        {
+                            UserId = usrId,
+                            Email = viewer.Email,
+                            Name = viewer.Name,
+                            Coins = (await GetViewerWallet(usrId)).Coins,
+                            UserSettings = usrs[usrId]
+                        });
+                    }
+                }
+                catch (Exception ex)
                 {
                     toRet.Add(new UserFullProfile()
                     {
                         UserId = usrId,
-                        Email = viewer.Email,
-                        Name = viewer.Name,
-                        Coins = (await GetViewerWallet(usrId)).Coins,
-                        UserSettings = usrs[usrId]
+                        Email = ex.Message,
+                        Name = ex.InnerException.Message,
+                        //Coins = (await GetViewerWallet(usrId)).Coins,
+                        //UserSettings = usrs[usrId]
                     });
                 }
             }

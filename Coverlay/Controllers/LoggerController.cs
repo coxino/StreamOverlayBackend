@@ -15,7 +15,7 @@ namespace Coverlay.Controllers
         [HttpPost("feed")]
         public async Task<ActionResult<bool>> SetAsync([FromHeader] string token, [FromBody] object data)
         {            
-            await System.IO.File.AppendAllTextAsync("C:/Logger/log.txt", "\r\n" + DateTime.Now.ToString("HH:mm:ss:ff") + ":" + data);
+            //await System.IO.File.AppendAllTextAsync("../Logger/log.txt", "\r\n" + DateTime.Now.ToString("HH:mm:ss:ff") + ":" + data);
             return Ok(true);
         }
     }

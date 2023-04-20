@@ -31,29 +31,36 @@ namespace Coverlay.Controllers
         [HttpGet("setinplay")]
         public async Task<ActionResult<Game>> SetInPlayAsync(string token, string url)
         {
-            var db = await UserDatabase.GetDatabaseAsync(token, _context);
-            if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
+            try
             {
-                string posibleGameName = "";
-                var posibleGameNames = AllGamesDatabase.AllGames.Where(x => RemoveSpecialCharacters(url).Contains(RemoveSpecialCharacters(x.Game.Name)));
-
-                if (posibleGameNames.Count() > 0)
+                var db = await UserDatabase.GetDatabaseAsync(token, _context);
+                if (db.ValidationResponse.ValidationResponse == ValidationResponse.Success)
                 {
-                    posibleGameNames = posibleGameNames.OrderByDescending(x => x.Game.Name.Length);
-                    posibleGameName = posibleGameNames.FirstOrDefault().Game.Name;
-                }
+                    string posibleGameName = "";
+                    var posibleGameNames = AllGamesDatabase.AllGames.Where(x => RemoveSpecialCharacters(url).Contains(RemoveSpecialCharacters(x.Name)));
 
-                else
-                {
-                    db.SetInplayGame(new InPlayGame()
+                    if (posibleGameNames.Count() > 0)
                     {
-                        Game = new Game() { Name = "New Game", Image = "logo.png", Potential = "Unknown", Provider = "Unknown", Rounds = new List<Round>(), Volatility = "Unknown" },
-                    });
-                    return new Game() { Name = "New Game", Image = "logo.png", Potential = "Unknown", Provider = "Unknown", Rounds = new List<Round>(), Volatility = "Unknown" };
-                }
+                        posibleGameNames = posibleGameNames.OrderByDescending(x => x.Name.Length);
+                        posibleGameName = posibleGameNames.FirstOrDefault().Name;
+                    }
 
-                db.SetInplayGame(posibleGameName);
-                return Ok(db.GetInPlayGame().Game);
+                    else
+                    {
+                        db.SetInplayGame(new InPlayGame()
+                        {
+                            Game = new Game() { Name = "New Game", Image = "logo.png", Potential = "Unknown", Provider = "Unknown", Rounds = new List<Round>(), Volatility = "Unknown" },
+                        });
+                        return new Game() { Name = "New Game", Image = "logo.png", Potential = "Unknown", Provider = "Unknown", Rounds = new List<Round>(), Volatility = "Unknown" };
+                    }
+
+                    db.SetInplayGame(posibleGameName);
+                    return Ok(db.GetInPlayGame().Game);
+                }
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
 
             return new Game() { Name = "New Game", Image = "logo.png", Potential = "Unknown", Provider = "Unknown", Rounds = new List<Round>(), Volatility = "Unknown" };

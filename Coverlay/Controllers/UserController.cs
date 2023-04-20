@@ -49,10 +49,11 @@ namespace Coverlay.Controllers
                     Password = password,
                     Created = DateTime.Now,
                     Id = Guid.NewGuid(),
-                    IsBanned = false,
-                    Role = 0,
                     Subscription = DateTime.Now.AddDays(7),
-                    Email = email
+                    Email = email,
+                    TwitchId = "",
+                    TwitchToken = "",
+                    YoutubeToken = ""
                 };
                 _context.Accounts.Add(account);
                 if (await _context.SaveChangesAsync() > 0)

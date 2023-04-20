@@ -53,7 +53,7 @@ namespace Settings
 
         public static string AllGamesOnWebsite = @"D:\Repositoryes\StreamOverlayFrontEnd\src\assets\database\AllGames.json";
 
-        public static string AllGamesOnDebug = @"C:\StreamOverlay\assets\database\AllGames.json";
+        public static string AllGamesOnDebug = @"AllGames.json";
 
         public static string Pacaniada = @"/pacaniada.json";
 
